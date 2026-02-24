@@ -17,8 +17,10 @@ class MtgSettings : PersistentStateComponent<MtgSettings> {
     var sdBaseUrl: String = "http://localhost:7860"
     var comfyUiUrl: String = "http://localhost:8188"
 
-    // Cloud API settings (fallback when local SD unavailable)
-    var cloudArtProvider: CloudArtProvider = CloudArtProvider.NONE
+    // Art source selection
+    var artSource: ArtSource = ArtSource.LOCAL_SD  // Which art generation to use
+
+    // Cloud API settings
     var stabilityApiKey: String = ""  // User's own API key
 
     // Art generation settings
@@ -60,7 +62,8 @@ enum class SdBackend {
     COMFYUI
 }
 
-enum class CloudArtProvider {
-    NONE,           // Use local SD only, fallback to bundled art
-    STABILITY_AI    // Use Stability AI API
+enum class ArtSource {
+    LOCAL_SD,       // Use local Stable Diffusion
+    STABILITY_AI,   // Use Stability AI cloud API
+    BUNDLED_ONLY    // Use bundled fallback art only (no generation)
 }

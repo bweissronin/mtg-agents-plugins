@@ -20,8 +20,8 @@ class MtgSettingsConfigurable : Configurable {
     private val sdBackendCombo = JComboBox(arrayOf("AUTOMATIC1111", "ComfyUI"))
     private val sdUrlField = JBTextField()
 
-    // Cloud API settings
-    private val cloudProviderCombo = JComboBox(arrayOf("None (use bundled fallback)", "Stability AI"))
+    // Art source selection
+    private val artSourceCombo = JComboBox(arrayOf("Local Stable Diffusion", "Stability AI (Cloud)", "Bundled Art Only"))
     private val stabilityApiKeyField = JBPasswordField()
     private val clearCacheButton = JButton("Clear Art Cache")
     private val cacheStatusLabel = JBLabel("")
@@ -43,13 +43,15 @@ class MtgSettingsConfigurable : Configurable {
 
     override fun createComponent(): JComponent {
         mainPanel = FormBuilder.createFormBuilder()
-            .addComponent(JBLabel("<html><b>Local Stable Diffusion</b></html>"))
+            .addComponent(JBLabel("<html><b>Art Source</b></html>"))
+            .addLabeledComponent("Generate art using:", artSourceCombo)
+            .addSeparator()
+            .addComponent(JBLabel("<html><b>Local Stable Diffusion Settings</b></html>"))
             .addLabeledComponent("Backend:", sdBackendCombo)
             .addLabeledComponent("API URL:", sdUrlField)
             .addSeparator()
-            .addComponent(JBLabel("<html><b>Cloud API (for custom art generation)</b></html>"))
-            .addLabeledComponent("Provider:", cloudProviderCombo)
-            .addLabeledComponent("Stability AI Key:", stabilityApiKeyField)
+            .addComponent(JBLabel("<html><b>Stability AI Settings</b></html>"))
+            .addLabeledComponent("API Key:", stabilityApiKeyField)
             .addComponent(JBLabel("<html><i style='color:gray;font-size:10px;'>Get your API key at platform.stability.ai</i></html>"))
             .addSeparator()
             .addComponent(JBLabel("<html><b>Art Cache</b></html>"))
@@ -87,9 +89,9 @@ class MtgSettingsConfigurable : Configurable {
 
     override fun isModified(): Boolean {
         val settings = MtgSettings.getInstance()
-        return sdBackendCombo.selectedIndex != settings.sdBackend.ordinal ||
+        return artSourceCombo.selectedIndex != settings.artSource.ordinal ||
+               sdBackendCombo.selectedIndex != settings.sdBackend.ordinal ||
                sdUrlField.text != getCurrentUrl(settings) ||
-               cloudProviderCombo.selectedIndex != settings.cloudArtProvider.ordinal ||
                String(stabilityApiKeyField.password) != settings.stabilityApiKey ||
                artCacheCheckbox.isSelected != settings.artCacheEnabled ||
                (artStepsSpinner.value as Int) != settings.artGenerationSteps ||
@@ -109,7 +111,7 @@ class MtgSettingsConfigurable : Configurable {
             SdBackend.COMFYUI -> settings.comfyUiUrl = sdUrlField.text
         }
 
-        settings.cloudArtProvider = CloudArtProvider.entries[cloudProviderCombo.selectedIndex]
+        settings.artSource = ArtSource.entries[artSourceCombo.selectedIndex]
         settings.stabilityApiKey = String(stabilityApiKeyField.password)
 
         settings.artCacheEnabled = artCacheCheckbox.isSelected
@@ -125,7 +127,7 @@ class MtgSettingsConfigurable : Configurable {
         val settings = MtgSettings.getInstance()
         sdBackendCombo.selectedIndex = settings.sdBackend.ordinal
         sdUrlField.text = getCurrentUrl(settings)
-        cloudProviderCombo.selectedIndex = settings.cloudArtProvider.ordinal
+        artSourceCombo.selectedIndex = settings.artSource.ordinal
         stabilityApiKeyField.text = settings.stabilityApiKey
         artCacheCheckbox.isSelected = settings.artCacheEnabled
         artStepsSpinner.value = settings.artGenerationSteps

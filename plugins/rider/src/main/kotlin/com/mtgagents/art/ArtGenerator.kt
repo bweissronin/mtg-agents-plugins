@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mtgagents.model.CardData
 import com.mtgagents.model.ManaColor
-import com.mtgagents.settings.CloudArtProvider
+import com.mtgagents.settings.ArtSource
 import com.mtgagents.settings.MtgSettings
 import com.mtgagents.settings.SdBackend
 import java.io.File
@@ -22,51 +22,66 @@ class ArtGenerator {
     private val artCache = mutableMapOf<String, String>()
 
     /**
-     * Generate art for the given card.
-     * Tries in order: Local SD → Cloud API (if configured) → Bundled fallback
+     * Generate art for the given card based on the user's art source setting.
      * Returns the path to the generated image.
      */
     fun generateArt(card: CardData): String? {
         val settings = MtgSettings.getInstance()
 
-        println("MTG Art Generator: Starting art generation for '${card.name}'")
+        println("MTG Art Generator: Starting art generation for '${card.name}' using ${settings.artSource}")
 
-        // 1. Try local Stable Diffusion first
-        if (isBackendAvailable()) {
-            println("MTG Art Generator: Trying local SD backend ${settings.sdBackend} at ${settings.sdBaseUrl}")
-            try {
-                val result = when (settings.sdBackend) {
-                    SdBackend.AUTOMATIC1111 -> generateWithAutomatic1111(card, settings)
-                    SdBackend.COMFYUI -> generateWithComfyUI(card, settings)
+        return when (settings.artSource) {
+            ArtSource.LOCAL_SD -> {
+                // Try local Stable Diffusion, fall back to bundled
+                if (isBackendAvailable()) {
+                    println("MTG Art Generator: Trying local SD backend ${settings.sdBackend} at ${settings.sdBaseUrl}")
+                    try {
+                        val result = when (settings.sdBackend) {
+                            SdBackend.AUTOMATIC1111 -> generateWithAutomatic1111(card, settings)
+                            SdBackend.COMFYUI -> generateWithComfyUI(card, settings)
+                        }
+                        if (result != null) {
+                            println("MTG Art Generator: Successfully generated art via local SD at $result")
+                            return result
+                        }
+                    } catch (e: Exception) {
+                        println("MTG Art Generator: Local SD failed: ${e.message}")
+                    }
+                } else {
+                    println("MTG Art Generator: Local SD not available")
                 }
-                if (result != null) {
-                    println("MTG Art Generator: Successfully generated art via local SD at $result")
-                    return result
-                }
-            } catch (e: Exception) {
-                println("MTG Art Generator: Local SD failed: ${e.message}")
+                // Fall back to bundled
+                println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
+                getBundledFallbackArt(card)
             }
-        } else {
-            println("MTG Art Generator: Local SD not available")
-        }
 
-        // 2. Try cloud API if configured
-        if (settings.cloudArtProvider == CloudArtProvider.STABILITY_AI && settings.stabilityApiKey.isNotBlank()) {
-            println("MTG Art Generator: Trying Stability AI cloud API")
-            try {
-                val result = generateWithStabilityAI(card, settings)
-                if (result != null) {
-                    println("MTG Art Generator: Successfully generated art via Stability AI at $result")
-                    return result
+            ArtSource.STABILITY_AI -> {
+                // Try Stability AI cloud API, fall back to bundled
+                if (settings.stabilityApiKey.isNotBlank()) {
+                    println("MTG Art Generator: Trying Stability AI cloud API")
+                    try {
+                        val result = generateWithStabilityAI(card, settings)
+                        if (result != null) {
+                            println("MTG Art Generator: Successfully generated art via Stability AI at $result")
+                            return result
+                        }
+                    } catch (e: Exception) {
+                        println("MTG Art Generator: Stability AI failed: ${e.message}")
+                    }
+                } else {
+                    println("MTG Art Generator: Stability AI selected but no API key configured")
                 }
-            } catch (e: Exception) {
-                println("MTG Art Generator: Stability AI failed: ${e.message}")
+                // Fall back to bundled
+                println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
+                getBundledFallbackArt(card)
+            }
+
+            ArtSource.BUNDLED_ONLY -> {
+                // Use bundled art only - no generation
+                println("MTG Art Generator: Using bundled art only (no generation)")
+                getBundledFallbackArt(card)
             }
         }
-
-        // 3. Fall back to bundled art
-        println("MTG Art Generator: Using bundled fallback art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
-        return getBundledFallbackArt(card)
     }
 
     /**
