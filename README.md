@@ -24,7 +24,7 @@ IDE plugins that parse AI agent definitions from your codebase and render each a
 
 ### Installation
 
-See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+See [INSTALL.md](docs/INSTALL.md) for detailed installation instructions.
 
 **Quick version:**
 1. Download the plugin for your IDE from releases
@@ -71,7 +71,7 @@ By default, cards use bundled fantasy art based on color. For custom AI-generate
 2. Configure in your IDE's settings
 3. Regenerate your deck
 
-See [INSTALL.md](INSTALL.md) for details.
+See [INSTALL.md](docs/INSTALL.md) for details.
 
 ## Project Structure
 
@@ -80,10 +80,10 @@ MtgAgentsPlugin/
 ├── plugins/
 │   ├── rider/          # JetBrains Rider plugin (Kotlin)
 │   └── vscode/         # VS Code extension (TypeScript)
+├── releases/           # Pre-built downloadable plugins
+├── docs/               # Documentation (INSTALL, PUBLISHING, TESTING)
 ├── test-fixtures/      # Sample agent files
 ├── scripts/            # Build utilities
-├── INSTALL.md          # Installation guide
-├── PUBLISHING.md       # Publishing guide
 └── CLAUDE.md           # Development documentation
 ```
 
