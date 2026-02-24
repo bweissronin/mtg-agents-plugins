@@ -103,8 +103,8 @@ class ArtGenerator {
         connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
         connection.doOutput = true
-        connection.connectTimeout = 5000
-        connection.readTimeout = 120000  // 2 minutes for generation
+        connection.connectTimeout = 10000
+        connection.readTimeout = 300000  // 5 minutes for generation with hi-res fix
 
         connection.outputStream.use { os ->
             os.write(gson.toJson(payload).toByteArray())
