@@ -40,10 +40,33 @@ See [INSTALL.md](docs/INSTALL.md) for detailed installation instructions.
    display_name: My Agent
    model: sonnet
    color: blue
-   card_style: borderless
    ---
 
    You are an AI agent that...
+   ```
+
+   **Full metadata example** (all fields optional except `name`):
+   ```yaml
+   ---
+   name: code-reviewer
+   display_name: Code Reviewer
+   description: Use this agent to review code for quality and security.
+   model: opus
+   color: white, blue
+
+   # Card customization
+   mana_cost: "{3}{W}{U}"
+   power: 4
+   toughness: 5
+   type_line: Legendary Creature — AI Arbiter
+   flavor_text: No bug escapes its gaze. No flaw survives its judgment.
+   card_style: borderless
+
+   # Art generation hints
+   creature_type: armored celestial judge holding scales and a glowing code scroll
+   art_style: divine radiance, gold and white armor, floating code runes
+   art_prompt: A majestic armored arbiter with wings of light, holding golden scales
+   ---
    ```
 
 2. **Visualize:**
