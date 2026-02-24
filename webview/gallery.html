@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Agent Deck Gallery</title>
+    <link rel="stylesheet" href="css/mtg-card.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+        }
+
+        .gallery-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .gallery-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .gallery-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-family: 'Beleren', serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-controls">
+        <button class="gallery-btn" onclick="toggleFrameMode()">Toggle Frames</button>
+        <button class="gallery-btn" onclick="refreshGallery()">Refresh</button>
+    </div>
+
+    <div id="gallery-container" class="gallery">
+        <!-- Cards will be rendered here -->
+    </div>
+
+    <script src="js/card-engine.js"></script>
+    <script>
+        let useVectorFrames = false;
+
+        function toggleFrameMode() {
+            useVectorFrames = !useVectorFrames;
+            cardEngine.setUseVectorFrames(useVectorFrames);
+
+            // Re-render all cards
+            if (window.currentCards) {
+                window.renderGallery(window.currentCards);
+            }
+        }
+
+        function refreshGallery() {
+            if (window.sendToPlugin) {
+                window.sendToPlugin('refresh');
+            }
+        }
+
+        // Override renderGallery to store cards
+        const originalRenderGallery = window.renderGallery;
+        window.renderGallery = function(cardsData) {
+            window.currentCards = cardsData;
+
+            if (cardsData.length === 0) {
+                document.getElementById('gallery-container').innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+                        </svg>
+                        <h2>No Agents Found</h2>
+                        <p>No AI agents were detected in your project.</p>
+                        <p>Supported frameworks: LangChain, OpenAI Agents SDK, CrewAI</p>
+                    </div>
+                `;
+                return;
+            }
+
+            originalRenderGallery(cardsData, '#gallery-container');
+        };
+
+        // Example cards for testing
+        const exampleCards = [
+            {
+                name: "Research Agent",
+                manaCost: "{2}{U}{U}",
+                colorIdentity: ["BLUE"],
+                typeLine: "Legendary Creature — AI Agent LangChain",
+                artUrl: null,
+                abilities: [
+                    { name: "Web Search", description: "Search the web", abilityType: "ACTIVATED" },
+                    { name: "Analyze", description: "Process data", abilityType: "ACTIVATED" }
+                ],
+                flavorText: "You are a research agent focused on finding accurate information.",
+                power: 2,
+                toughness: 1,
+                setSymbol: "AGENTS",
+                collectorInfo: "gpt-4o"
+            },
+            {
+                name: "Code Writer",
+                manaCost: "{1}{R}{R}",
+                colorIdentity: ["RED"],
+                typeLine: "Legendary Creature — AI Agent OpenAI",
+                artUrl: null,
+                abilities: [
+                    { name: "Write Code", description: "Generate code", abilityType: "ACTIVATED" },
+                    { name: "Debug", description: "Fix issues", abilityType: "ACTIVATED" }
+                ],
+                flavorText: "You are a coding assistant that writes clean, efficient code.",
+                power: 2,
+                toughness: 1,
+                setSymbol: "AGENTS",
+                collectorInfo: "claude-3-5-sonnet"
+            },
+            {
+                name: "Orchestrator",
+                manaCost: "{3}{W}{W}",
+                colorIdentity: ["WHITE"],
+                typeLine: "Legendary Creature — AI Commander",
+                artUrl: null,
+                abilities: [
+                    { name: "Delegate", description: "Assign tasks to agents", abilityType: "ACTIVATED" },
+                    { name: "Coordinate", description: "Manage workflow", abilityType: "STATIC" }
+                ],
+                flavorText: "I oversee all operations and ensure smooth coordination.",
+                power: 3,
+                toughness: 3,
+                setSymbol: "AGENTS",
+                collectorInfo: "gpt-4o"
+            }
+        ];
+
+        // Render example if no data injected
+        setTimeout(() => {
+            const container = document.getElementById('gallery-container');
+            if (container && !container.querySelector('.mtg-card')) {
+                window.renderGallery(exampleCards);
+            }
+        }, 100);
+    </script>
+</body>
+</html>

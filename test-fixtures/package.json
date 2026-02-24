@@ -1,0 +1,21 @@
+{
+  "name": "mtg-agent-visualizer-test-fixtures",
+  "version": "1.0.0",
+  "description": "Test fixtures for MTG Agent Visualizer plugin",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/langgraph": "^0.2.0",
+    "@langchain/openai": "^0.3.0",
+    "crewai": "^0.1.0",
+    "openai": "^4.0.0",
+    "openai-agents": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

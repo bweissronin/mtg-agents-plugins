@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Green Mana - Tree -->
+  <!-- Outer green border -->
+  <circle cx="50" cy="50" r="48" fill="#3d7a3d" stroke="#2d5a2d" stroke-width="2"/>
+  <!-- Inner cream background -->
+  <circle cx="50" cy="50" r="42" fill="#e8e4d4"/>
+  <!-- Tree canopy - cloud-like rounded shape -->
+  <path d="M50 12
+           C30 12 18 24 18 40
+           C18 50 24 58 32 62
+           C28 66 28 72 32 76
+           L42 76 L42 86 L58 86 L58 76 L68 76
+           C72 72 72 66 68 62
+           C76 58 82 50 82 40
+           C82 24 70 12 50 12 Z"
+        fill="#3d7a3d"/>
+  <!-- Highlight spots in canopy -->
+  <ellipse cx="36" cy="38" rx="4" ry="5" fill="#e8e4d4" opacity="0.6"/>
+  <ellipse cx="56" cy="32" rx="3" ry="4" fill="#e8e4d4" opacity="0.6"/>
+  <ellipse cx="64" cy="44" rx="4" ry="5" fill="#e8e4d4" opacity="0.6"/>
+  <ellipse cx="44" cy="54" rx="3" ry="4" fill="#e8e4d4" opacity="0.6"/>
+  <ellipse cx="58" cy="58" rx="3" ry="4" fill="#e8e4d4" opacity="0.6"/>
+</svg>

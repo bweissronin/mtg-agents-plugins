@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Colorless Mana - Diamond/Four-pointed star -->
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="46" fill="#e8e8e0" stroke="#888880" stroke-width="4"/>
+  <!-- Four-pointed diamond shape -->
+  <path d="M50 10
+           L62 38
+           L90 50
+           L62 62
+           L50 90
+           L38 62
+           L10 50
+           L38 38
+           Z"
+        fill="none"
+        stroke="#888880"
+        stroke-width="5"/>
+  <!-- Inner highlight -->
+  <path d="M50 22
+           L58 42
+           L78 50
+           L58 58
+           L50 78
+           L42 58
+           L22 50
+           L42 42
+           Z"
+        fill="#888880"
+        opacity="0.3"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Red Mana - Flame -->
+  <!-- Outer red border -->
+  <circle cx="50" cy="50" r="48" fill="#b34233" stroke="#8c332a" stroke-width="2"/>
+  <!-- Inner cream background -->
+  <circle cx="50" cy="50" r="42" fill="#e8e4d4"/>
+  <!-- Flame shape - curved yin-yang style -->
+  <path d="M72 22
+           C82 34 86 50 80 66
+           C74 82 58 90 42 86
+           C26 82 16 68 18 52
+           C20 40 30 36 38 42
+           C44 46 42 56 36 62
+           C30 68 32 76 42 78
+           C52 80 62 74 66 62
+           C70 50 64 42 54 42
+           C46 42 44 52 50 56
+           C56 60 58 52 54 46
+           C50 40 56 32 66 32
+           C72 32 74 28 72 22 Z"
+        fill="#b34233"/>
+</svg>

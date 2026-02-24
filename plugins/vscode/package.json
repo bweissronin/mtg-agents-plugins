@@ -1,0 +1,125 @@
+{
+  "name": "mtg-agent-visualizer",
+  "displayName": "MTG Agent Visualizer",
+  "description": "Visualize your AI agents as Magic: The Gathering cards",
+  "version": "1.0.0",
+  "publisher": "mtgagents",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "mtg",
+    "magic the gathering",
+    "visualization"
+  ],
+  "activationEvents": [
+    "onCommand:mtgAgent.visualizeCard",
+    "onCommand:mtgAgent.generateDeck",
+    "onCommand:mtgAgent.openBattlefield"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mtgAgent.visualizeCard",
+        "title": "Visualize as MTG Card",
+        "category": "MTG Agent"
+      },
+      {
+        "command": "mtgAgent.generateDeck",
+        "title": "Generate Agent Deck",
+        "category": "MTG Agent"
+      },
+      {
+        "command": "mtgAgent.openBattlefield",
+        "title": "Open Agent Battlefield",
+        "category": "MTG Agent"
+      },
+      {
+        "command": "mtgAgent.clearCache",
+        "title": "Clear Art Cache",
+        "category": "MTG Agent"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "mtgAgent.visualizeCard",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "mtgAgent.visualizeCard",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MTG Agent Visualizer",
+      "properties": {
+        "mtgAgent.cloudProvider": {
+          "type": "string",
+          "default": "none",
+          "enum": ["none", "stabilityai"],
+          "enumDescriptions": [
+            "Use bundled fallback art only",
+            "Use Stability AI for custom art generation"
+          ],
+          "description": "Cloud provider for art generation"
+        },
+        "mtgAgent.stabilityApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Stability AI API key (get one at platform.stability.ai)"
+        },
+        "mtgAgent.artGenerationSteps": {
+          "type": "number",
+          "default": 40,
+          "minimum": 10,
+          "maximum": 50,
+          "description": "Number of generation steps (higher = better quality, slower)"
+        },
+        "mtgAgent.cfgScale": {
+          "type": "number",
+          "default": 6.5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "CFG scale (how closely to follow the prompt)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bweissronin/mtg-agents-plugins.git"
+  }
+}

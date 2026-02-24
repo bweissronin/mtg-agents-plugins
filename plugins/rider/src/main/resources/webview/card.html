@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Agent Card</title>
+    <link rel="stylesheet" href="css/mtg-card.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Card will be rendered here by JavaScript -->
+    <div id="card-container"></div>
+
+    <script src="js/card-engine.js"></script>
+    <script>
+        // Initialize card engine
+        const cardEngine = new MtgCardEngine();
+
+        // Override renderCard to target container
+        window.renderCard = function(cardData) {
+            cardEngine.renderCard(cardData, '#card-container');
+        };
+
+        // Example card for testing (will be replaced by plugin data)
+        const exampleCard = {
+            name: "Research Agent",
+            manaCost: "{2}{U}{U}",
+            colorIdentity: ["BLUE"],
+            typeLine: "Legendary Creature — AI Agent LangChain",
+            artUrl: null,
+            abilities: [
+                { name: "Web Search", description: "Search the web for information", abilityType: "ACTIVATED" },
+                { name: "Analyze Data", description: "Process and analyze retrieved data", abilityType: "ACTIVATED" },
+                { name: "Generate Report", description: "Create comprehensive reports", abilityType: "ACTIVATED" }
+            ],
+            flavorText: "You are a research agent. Your goal is to find accurate information and synthesize it into useful insights.",
+            power: 3,
+            toughness: 1,
+            setSymbol: "MTG-AGENTS",
+            collectorInfo: "gpt-4o",
+            frameType: "CREATURE",
+            sourceFile: "/src/agents/research.ts",
+            sourceLineNumber: 42
+        };
+
+        // Render example card if no data is injected
+        setTimeout(() => {
+            const container = document.getElementById('card-container');
+            if (container && !container.hasChildNodes()) {
+                window.renderCard(exampleCard);
+            }
+        }, 100);
+    </script>
+</body>
+</html>

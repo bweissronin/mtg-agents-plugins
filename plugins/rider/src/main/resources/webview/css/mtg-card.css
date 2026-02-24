@@ -1,0 +1,573 @@
+/* MTG Card Styles - Pixel-perfect recreation */
+
+@font-face {
+    font-family: 'Beleren';
+    src: url('../fonts/Beleren-Bold.woff2') format('woff2');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'MPlantin';
+    src: url('../fonts/MPlantin.woff2') format('woff2');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: 'MPlantin';
+    src: url('../fonts/MPlantin-Italic.woff2') format('woff2');
+    font-weight: normal;
+    font-style: italic;
+}
+
+:root {
+    /* MTG Official Colors */
+    --mtg-white: #F8F6D8;
+    --mtg-blue: #0E68AB;
+    --mtg-black: #150B00;
+    --mtg-red: #D3202A;
+    --mtg-green: #00733E;
+    --mtg-gold: #C9A32E;
+    --mtg-artifact: #A6C8D4;
+
+    /* Card dimensions (standard 2.5" x 3.5" at 300dpi scaled) */
+    --card-width: 375px;
+    --card-height: 523px;
+    --card-border-radius: 18px;
+
+    /* Frame proportions */
+    --art-top: 58px;
+    --art-height: 180px;
+    --name-height: 32px;
+    --type-height: 26px;
+    --text-box-top: 280px;
+    --text-box-height: 160px;
+    --pt-box-size: 48px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'MPlantin', Georgia, serif;
+    background: #1a1a2e;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Card Container */
+.mtg-card {
+    position: relative;
+    width: var(--card-width);
+    height: var(--card-height);
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(0, 0, 0, 0.8),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+}
+
+.mtg-card:hover {
+    transform: translateY(-5px) rotateX(2deg);
+}
+
+/* Card Frame (Background) */
+.card-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.card-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Frame Colors for Vector Mode */
+.card-frame.vector {
+    background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+}
+
+.card-frame.vector.white {
+    background: linear-gradient(135deg, var(--mtg-white) 0%, #d4d0b8 100%);
+}
+
+.card-frame.vector.blue {
+    background: linear-gradient(135deg, #1e88c9 0%, var(--mtg-blue) 100%);
+}
+
+.card-frame.vector.black {
+    background: linear-gradient(135deg, #3a3030 0%, var(--mtg-black) 100%);
+}
+
+.card-frame.vector.red {
+    background: linear-gradient(135deg, #e84545 0%, var(--mtg-red) 100%);
+}
+
+.card-frame.vector.green {
+    background: linear-gradient(135deg, #2ea55e 0%, var(--mtg-green) 100%);
+}
+
+.card-frame.vector.multicolor {
+    background: linear-gradient(135deg, var(--mtg-gold) 0%, #a07820 100%);
+}
+
+.card-frame.vector.artifact {
+    background: linear-gradient(135deg, #c8dce4 0%, var(--mtg-artifact) 100%);
+}
+
+/* Card Inner Border */
+.card-inner {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 14px;
+    pointer-events: none;
+}
+
+/* Name Bar */
+.card-name-bar {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    right: 20px;
+    height: var(--name-height);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(240, 238, 220, 0.95) 100%);
+    border-radius: 8px 8px 0 0;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-name {
+    font-family: 'Beleren', 'Palatino Linotype', serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 250px;
+}
+
+.mana-cost {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.mana-symbol {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Keyrune', sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.mana-symbol.w { background: linear-gradient(135deg, #FFFBD5 0%, #F0E6B8 100%); color: #333; }
+.mana-symbol.u { background: linear-gradient(135deg, #AAE0FA 0%, #0E68AB 100%); color: #fff; }
+.mana-symbol.b { background: linear-gradient(135deg, #CAC5C0 0%, #150B00 100%); color: #fff; }
+.mana-symbol.r { background: linear-gradient(135deg, #F9AA8F 0%, #D3202A 100%); color: #fff; }
+.mana-symbol.g { background: linear-gradient(135deg, #9BD3AE 0%, #00733E 100%); color: #fff; }
+.mana-symbol.c { background: linear-gradient(135deg, #CAC5C0 0%, #9E9E9E 100%); color: #333; }
+.mana-symbol.generic { background: linear-gradient(135deg, #CAC5C0 0%, #7D7D7D 100%); color: #333; }
+
+/* Art Box */
+.art-box {
+    position: absolute;
+    top: var(--art-top);
+    left: 22px;
+    right: 22px;
+    height: var(--art-height);
+    background: #1a1a2e;
+    border: 3px solid #000;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.art-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.art-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2a2a4a 0%, #1a1a2e 50%, #2a2a4a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.art-placeholder::before {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(100, 150, 255, 0.4) 0%,
+        rgba(100, 150, 255, 0.1) 40%,
+        transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.art-loading {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Type Line */
+.type-line {
+    position: absolute;
+    top: 246px;
+    left: 20px;
+    right: 20px;
+    height: var(--type-height);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.85) 0%,
+        rgba(240, 238, 220, 0.9) 100%);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-family: 'Beleren', serif;
+    font-size: 12px;
+    color: #000;
+}
+
+.type-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.set-symbol {
+    margin-left: auto;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* Text Box */
+.text-box {
+    position: absolute;
+    top: var(--text-box-top);
+    left: 20px;
+    right: 20px;
+    height: var(--text-box-height);
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.92) 0%,
+        rgba(245, 243, 230, 0.95) 100%);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 6px 6px;
+    padding: 10px 12px;
+    overflow-y: auto;
+    color: #000;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.ability {
+    margin-bottom: 8px;
+}
+
+.ability-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background: #333;
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 14px;
+    font-size: 10px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.ability-name {
+    font-weight: bold;
+}
+
+.ability-cost {
+    color: #666;
+    font-style: italic;
+}
+
+.flavor-text {
+    font-style: italic;
+    color: #444;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+/* Power/Toughness Box */
+.pt-box {
+    position: absolute;
+    bottom: 22px;
+    right: 26px;
+    width: var(--pt-box-size);
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(220, 215, 200, 0.95) 100%);
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-family: 'Beleren', serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Collector Info */
+.collector-info {
+    position: absolute;
+    bottom: 8px;
+    left: 22px;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'MPlantin', serif;
+}
+
+.card-frame.white .collector-info,
+.card-frame.vector.white .collector-info {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* Gallery View */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 30px;
+    padding: 30px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.gallery-header {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.gallery-header h1 {
+    font-family: 'Beleren', serif;
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.gallery-header p {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Battlefield View */
+.battlefield {
+    width: 100%;
+    height: 100vh;
+    background:
+        radial-gradient(ellipse at center, #2a2a4a 0%, #1a1a2e 70%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 50px,
+            rgba(255, 255, 255, 0.02) 50px,
+            rgba(255, 255, 255, 0.02) 51px
+        );
+    position: relative;
+    overflow: hidden;
+}
+
+.battlefield-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+
+.battlefield-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.battlefield-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mini Card (for battlefield) */
+.mini-card {
+    width: 120px;
+    height: 168px;
+    position: absolute;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.mini-card:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+}
+
+.mini-card-content {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3a3a5a 0%, #2a2a4a 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+}
+
+.mini-card-name {
+    font-family: 'Beleren', serif;
+    font-size: 10px;
+    color: #fff;
+    text-align: center;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mini-card-art {
+    flex: 1;
+    background: #1a1a2e;
+    margin: 4px 0;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mini-card-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mini-card-pt {
+    font-family: 'Beleren', serif;
+    font-size: 11px;
+    color: #fff;
+    text-align: right;
+    padding: 2px 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 3px;
+    align-self: flex-end;
+}
+
+/* Relationship edges */
+.relationship-edge {
+    stroke-width: 2;
+    fill: none;
+    marker-end: url(#arrowhead);
+}
+
+.relationship-edge.handoff {
+    stroke: #4CAF50;
+}
+
+.relationship-edge.tool-call {
+    stroke: #2196F3;
+    stroke-dasharray: 5, 3;
+}
+
+.relationship-edge.sub-agent {
+    stroke: #FF9800;
+}
+
+.relationship-edge.reference {
+    stroke: #9E9E9E;
+    stroke-dasharray: 2, 2;
+}
+
+/* Scrollbar */
+.text-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.text-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.text-box::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Agent Battlefield</title>
+    <link rel="stylesheet" href="css/mtg-card.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1a2e;
+        }
+
+        #battlefield-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-line {
+            width: 30px;
+            height: 2px;
+        }
+
+        .legend-line.handoff {
+            background: #4CAF50;
+        }
+
+        .legend-line.tool-call {
+            background: #2196F3;
+            background: repeating-linear-gradient(90deg, #2196F3 0, #2196F3 5px, transparent 5px, transparent 8px);
+        }
+
+        .legend-line.sub-agent {
+            background: #FF9800;
+        }
+
+        .legend-line.reference {
+            background: #9E9E9E;
+            background: repeating-linear-gradient(90deg, #9E9E9E 0, #9E9E9E 2px, transparent 2px, transparent 4px);
+        }
+
+        .empty-battlefield {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+        .empty-battlefield svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+
+        .empty-battlefield h2 {
+            font-family: 'Beleren', serif;
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-battlefield p {
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .stats {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            z-index: 100;
+        }
+
+        .stats span {
+            margin-right: 15px;
+        }
+
+        .stats .count {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="battlefield-container" class="battlefield">
+        <div class="empty-battlefield" id="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <h2>Battlefield Ready</h2>
+            <p>Run "Generate Agent Deck" from the Tools menu (Ctrl+Alt+D) to scan your project for AI agents and visualize them on this battlefield.</p>
+        </div>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+        <span>Agents: <span class="count" id="agent-count">0</span></span>
+        <span>Connections: <span class="count" id="connection-count">0</span></span>
+    </div>
+
+    <div class="legend" id="legend" style="display: none;">
+        <h4>Relationships</h4>
+        <div class="legend-item">
+            <div class="legend-line handoff"></div>
+            <span>Handoff</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-line tool-call"></div>
+            <span>Tool Call</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-line sub-agent"></div>
+            <span>Sub-Agent</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-line reference"></div>
+            <span>Reference</span>
+        </div>
+    </div>
+
+    <script src="js/card-engine.js"></script>
+    <script>
+        // Override loadBattlefieldData to handle empty state
+        const originalLoadBattlefieldData = window.loadBattlefieldData;
+        window.loadBattlefieldData = function(battlefieldData) {
+            const emptyState = document.getElementById('empty-state');
+            const stats = document.getElementById('stats');
+            const legend = document.getElementById('legend');
+
+            if (!battlefieldData.agents || battlefieldData.agents.length === 0) {
+                emptyState.style.display = 'flex';
+                stats.style.display = 'none';
+                legend.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            stats.style.display = 'block';
+            legend.style.display = 'block';
+
+            document.getElementById('agent-count').textContent = battlefieldData.agents.length;
+            document.getElementById('connection-count').textContent = battlefieldData.relationships.length;
+
+            originalLoadBattlefieldData(battlefieldData);
+        };
+
+        // Example battlefield data for testing
+        const exampleBattlefield = {
+            projectName: "my-agent-project",
+            agents: [
+                {
+                    name: "Orchestrator",
+                    manaCost: "{3}{W}{W}",
+                    colorIdentity: ["WHITE"],
+                    typeLine: "Legendary Creature — AI Commander",
+                    artUrl: null,
+                    abilities: [{ name: "Delegate", abilityType: "ACTIVATED" }],
+                    flavorText: "Coordinates all agent operations",
+                    power: 3,
+                    toughness: 3,
+                    setSymbol: "AGENTS"
+                },
+                {
+                    name: "Research Agent",
+                    manaCost: "{2}{U}{U}",
+                    colorIdentity: ["BLUE"],
+                    typeLine: "Legendary Creature — AI Agent",
+                    artUrl: null,
+                    abilities: [{ name: "Search", abilityType: "ACTIVATED" }],
+                    flavorText: "Finds information",
+                    power: 2,
+                    toughness: 1,
+                    setSymbol: "AGENTS"
+                },
+                {
+                    name: "Code Writer",
+                    manaCost: "{1}{R}{R}",
+                    colorIdentity: ["RED"],
+                    typeLine: "Legendary Creature — AI Agent",
+                    artUrl: null,
+                    abilities: [{ name: "Code", abilityType: "ACTIVATED" }],
+                    flavorText: "Writes code",
+                    power: 2,
+                    toughness: 1,
+                    setSymbol: "AGENTS"
+                },
+                {
+                    name: "Data Processor",
+                    manaCost: "{2}{G}{G}",
+                    colorIdentity: ["GREEN"],
+                    typeLine: "Legendary Creature — AI Agent",
+                    artUrl: null,
+                    abilities: [{ name: "Process", abilityType: "ACTIVATED" }],
+                    flavorText: "Processes data",
+                    power: 2,
+                    toughness: 2,
+                    setSymbol: "AGENTS"
+                }
+            ],
+            relationships: [
+                { sourceAgent: "Orchestrator", targetAgent: "Research Agent", relationshipType: "HANDOFF" },
+                { sourceAgent: "Orchestrator", targetAgent: "Code Writer", relationshipType: "HANDOFF" },
+                { sourceAgent: "Research Agent", targetAgent: "Data Processor", relationshipType: "TOOL_CALL" },
+                { sourceAgent: "Code Writer", targetAgent: "Data Processor", relationshipType: "REFERENCE" }
+            ]
+        };
+
+        // Initialize after a delay if no data is injected
+        setTimeout(() => {
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState.style.display !== 'none') {
+                // Keep showing empty state - don't auto-load example
+                // Uncomment below to show example data:
+                // window.loadBattlefieldData(exampleBattlefield);
+            }
+        }, 500);
+    </script>
+</body>
+</html>

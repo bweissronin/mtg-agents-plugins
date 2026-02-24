@@ -1,0 +1,109 @@
+<idea-plugin>
+    <id>com.mtgagents.visualizer</id>
+    <name>MTG Agent Visualizer</name>
+    <version>1.0.0</version>
+    <vendor email="support@mtgagents.com" url="https://github.com/mtgagents">MTG Agents</vendor>
+
+    <description><![CDATA[
+    Visualize your AI agents as Magic: The Gathering cards!
+
+    <p>This plugin parses AI agent definitions from your codebase and renders each agent as a
+    visually accurate MTG card — complete with AI-generated artwork, mana cost, abilities,
+    flavor text, and a "Battlefield" relationship board showing the full agent graph.</p>
+
+    <h3>Features:</h3>
+    <ul>
+        <li>Right-click any agent file → "Visualize as MTG Card"</li>
+        <li>Battlefield view showing all agents and their relationships</li>
+        <li>AI-generated card art (Local SD, Stability AI, or bundled fallbacks)</li>
+        <li>Standard and borderless (alt-art) card styles</li>
+        <li>Automatic agent relationship detection</li>
+    </ul>
+
+    <h3>Art Generation Options:</h3>
+    <ul>
+        <li>Local Stable Diffusion (AUTOMATIC1111 or ComfyUI)</li>
+        <li>Stability AI cloud API (bring your own key)</li>
+        <li>Bundled fallback art (works out of the box)</li>
+    </ul>
+
+    <h3>Supported Agent Formats:</h3>
+    <ul>
+        <li>Markdown with YAML frontmatter</li>
+        <li>LangChain / LangGraph</li>
+        <li>OpenAI Agents SDK</li>
+        <li>CrewAI</li>
+    </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+    <h3>1.0.0</h3>
+    <ul>
+        <li>Initial release</li>
+        <li>MTG card visualization for AI agents</li>
+        <li>Battlefield view with agent relationships</li>
+        <li>Multiple art generation options: Local SD, Stability AI, bundled fallbacks</li>
+        <li>Standard and borderless card styles</li>
+        <li>Authentic MTG mana symbols</li>
+    </ul>
+    ]]></change-notes>
+
+    <idea-version since-build="233" until-build="243.*"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <!-- JavaScript dependency removed - we parse files with regex, not PSI -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Window for Battlefield View -->
+        <toolWindow id="MTG Battlefield"
+                    secondary="true"
+                    icon="/icons/mtg-icon.svg"
+                    anchor="right"
+                    factoryClass="com.mtgagents.MtgToolWindowFactory"/>
+
+        <!-- Project Service for managing card state -->
+        <projectService serviceImplementation="com.mtgagents.MtgAgentService"/>
+
+        <!-- Settings/Preferences -->
+        <applicationConfigurable
+            parentId="tools"
+            instance="com.mtgagents.settings.MtgSettingsConfigurable"
+            id="com.mtgagents.settings"
+            displayName="MTG Agent Visualizer"/>
+
+        <applicationService serviceImplementation="com.mtgagents.settings.MtgSettings"/>
+    </extensions>
+
+    <actions>
+        <!-- Right-click context menu action -->
+        <action id="MtgAgent.VisualizeCard"
+                class="com.mtgagents.actions.VisualizeAsCardAction"
+                text="Visualize as MTG Card"
+                description="Render this agent as a Magic: The Gathering card"
+                icon="/icons/mtg-card.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt M"/>
+        </action>
+
+        <!-- Generate full deck command -->
+        <action id="MtgAgent.GenerateDeck"
+                class="com.mtgagents.actions.GenerateDeckAction"
+                text="Generate Agent Deck"
+                description="Scan project and generate MTG cards for all agents"
+                icon="/icons/mtg-deck.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt D"/>
+        </action>
+
+        <!-- Open Battlefield view -->
+        <action id="MtgAgent.OpenBattlefield"
+                class="com.mtgagents.actions.OpenBattlefieldAction"
+                text="Open Agent Battlefield"
+                description="Show all agents as a connected MTG battlefield"
+                icon="/icons/mtg-battlefield.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt B"/>
+        </action>
+    </actions>
+</idea-plugin>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Blue Mana - Water Droplet -->
+  <!-- Outer blue border -->
+  <circle cx="50" cy="50" r="48" fill="#3d5a80" stroke="#2c4a6e" stroke-width="2"/>
+  <!-- Inner cream background -->
+  <circle cx="50" cy="50" r="42" fill="#e8e4d4"/>
+  <!-- Water droplet -->
+  <path d="M50 14
+           C50 14 76 46 76 62
+           C76 78 64 86 50 86
+           C36 86 24 78 24 62
+           C24 46 50 14 50 14 Z"
+        fill="#3d5a80"/>
+  <!-- Highlight -->
+  <ellipse cx="38" cy="54" rx="5" ry="8" fill="#e8e4d4" transform="rotate(-10 38 54)"/>
+</svg>

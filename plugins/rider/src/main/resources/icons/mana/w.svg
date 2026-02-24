@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- White Mana - Sun -->
+  <!-- Outer gold border -->
+  <circle cx="50" cy="50" r="48" fill="#d9a831" stroke="#c4912a" stroke-width="2"/>
+  <!-- Inner cream background -->
+  <circle cx="50" cy="50" r="42" fill="#e8e4d4"/>
+  <!-- Sun rays - 8 curved flames -->
+  <g fill="#d9a831">
+    <!-- Top ray -->
+    <path d="M50 12 Q58 22 54 32 L50 28 L46 32 Q42 22 50 12"/>
+    <!-- Top-right ray -->
+    <path d="M76 24 Q72 36 62 38 L64 34 L60 32 Q68 26 76 24"/>
+    <!-- Right ray -->
+    <path d="M88 50 Q78 58 68 54 L72 50 L68 46 Q78 42 88 50"/>
+    <!-- Bottom-right ray -->
+    <path d="M76 76 Q68 74 62 62 L60 68 L64 66 Q72 64 76 76"/>
+    <!-- Bottom ray -->
+    <path d="M50 88 Q42 78 46 68 L50 72 L54 68 Q58 78 50 88"/>
+    <!-- Bottom-left ray -->
+    <path d="M24 76 Q32 74 38 62 L40 68 L36 66 Q28 64 24 76"/>
+    <!-- Left ray -->
+    <path d="M12 50 Q22 42 32 46 L28 50 L32 54 Q22 58 12 50"/>
+    <!-- Top-left ray -->
+    <path d="M24 24 Q28 36 38 38 L36 34 L40 32 Q32 26 24 24"/>
+  </g>
+  <!-- Center circle with ring -->
+  <circle cx="50" cy="50" r="14" fill="#d9a831"/>
+  <circle cx="50" cy="50" r="10" fill="none" stroke="#c4b89c" stroke-width="2"/>
+</svg>
