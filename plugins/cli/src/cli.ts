@@ -17,6 +17,7 @@ import { renderCardHtml, renderBattlefieldHtml } from './renderer/html';
 import { renderCardAscii, renderBattlefieldAscii } from './renderer/terminal';
 import { loadConfig, saveConfig, findConfigFile, printConfig, getConfigValue, setConfigValue } from './config';
 import { startServer } from './server';
+import { ArtGenerator } from './artGenerator';
 import { CardData, defaultConfig } from './types';
 
 const program = new Command();
@@ -36,6 +37,7 @@ program
     .option('-f, --format <type>', 'Output format: html, ascii', 'html')
     .option('--open', 'Open in browser after generation')
     .option('--style <style>', 'Card style: borderless, standard', 'borderless')
+    .option('--no-art', 'Skip art generation')
     .option('--config <path>', 'Path to config file')
     .action(async (file: string, options) => {
         const config = loadConfig(options.config);
@@ -57,6 +59,13 @@ program
         // Apply style override
         if (options.style) {
             card.cardStyle = options.style.toUpperCase() as any;
+        }
+
+        // Generate art if not already present (unless --no-art)
+        if (!card.artUrl && options.art !== false) {
+            const artGenerator = new ArtGenerator(config);
+            console.log(chalk.dim('Generating art...'));
+            card.artUrl = await artGenerator.generateArt(card) || undefined;
         }
 
         const format = options.format || config.output.format;
@@ -99,6 +108,7 @@ program
     .option('--serve', 'Start local server with hot-reload')
     .option('-p, --port <number>', 'Server port', '3000')
     .option('--ascii', 'Output ASCII art to terminal')
+    .option('--no-art', 'Skip art generation')
     .option('--config <path>', 'Path to config file')
     .action(async (directory: string = '.', options) => {
         const config = loadConfig(options.config);
@@ -128,6 +138,17 @@ program
             console.log(chalk.yellow('No agent files found in the directory.'));
             console.log(chalk.dim('Looking for .md files with YAML frontmatter, .yaml, or .json files.'));
             process.exit(0);
+        }
+
+        // Generate art for all cards (unless --no-art)
+        if (options.art !== false) {
+            const artGenerator = new ArtGenerator(config);
+            console.log(chalk.dim(`Generating art for ${cards.length} agents...`));
+            for (const card of cards) {
+                if (!card.artUrl) {
+                    card.artUrl = await artGenerator.generateArt(card) || undefined;
+                }
+            }
         }
 
         if (options.ascii) {

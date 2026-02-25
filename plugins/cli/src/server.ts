@@ -10,7 +10,9 @@ import chokidar from 'chokidar';
 import { WebSocketServer, WebSocket } from 'ws';
 import { parseFile } from './parser';
 import { renderBattlefieldHtml } from './renderer/html';
-import { CardData } from './types';
+import { ArtGenerator } from './artGenerator';
+import { CardData, Config } from './types';
+import { loadConfig } from './config';
 
 export interface ServerOptions {
     port: number;
@@ -21,6 +23,9 @@ export interface ServerOptions {
 
 export function startServer(options: ServerOptions): void {
     const { port, directory, patterns, hotReload } = options;
+
+    const config = loadConfig();
+    const artGenerator = new ArtGenerator(config);
 
     const app = express();
     const server = http.createServer(app);
@@ -40,7 +45,7 @@ export function startServer(options: ServerOptions): void {
     }
 
     // Scan for agent files
-    function scanAgents(): CardData[] {
+    async function scanAgents(): Promise<CardData[]> {
         const cards: CardData[] = [];
         const absoluteDir = path.resolve(directory);
 
@@ -74,11 +79,21 @@ export function startServer(options: ServerOptions): void {
         }
 
         scanDirectory(absoluteDir);
+
+        // Generate art for cards without it
+        for (const card of cards) {
+            if (!card.artUrl) {
+                card.artUrl = await artGenerator.generateArt(card) || undefined;
+            }
+        }
+
         return cards;
     }
 
     // Initial scan
-    cachedCards = scanAgents();
+    scanAgents().then(cards => {
+        cachedCards = cards;
+    });
 
     // Watch for changes
     if (hotReload) {
@@ -87,9 +102,9 @@ export function startServer(options: ServerOptions): void {
             persistent: true
         });
 
-        watcher.on('change', (filePath) => {
+        watcher.on('change', async (filePath) => {
             console.log(`File changed: ${filePath}`);
-            cachedCards = scanAgents();
+            cachedCards = await scanAgents();
 
             // Notify all clients to reload
             clients.forEach(client => {
@@ -99,8 +114,8 @@ export function startServer(options: ServerOptions): void {
             });
         });
 
-        watcher.on('add', () => {
-            cachedCards = scanAgents();
+        watcher.on('add', async () => {
+            cachedCards = await scanAgents();
             clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send('reload');
@@ -108,8 +123,8 @@ export function startServer(options: ServerOptions): void {
             });
         });
 
-        watcher.on('unlink', () => {
-            cachedCards = scanAgents();
+        watcher.on('unlink', async () => {
+            cachedCards = await scanAgents();
             clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send('reload');
@@ -119,10 +134,10 @@ export function startServer(options: ServerOptions): void {
     }
 
     // Routes
-    app.get('/', (req: Request, res: Response) => {
+    app.get('/', async (req: Request, res: Response) => {
         // Re-scan if not using hot-reload
         if (!hotReload) {
-            cachedCards = scanAgents();
+            cachedCards = await scanAgents();
         }
 
         let html = renderBattlefieldHtml(cachedCards);
