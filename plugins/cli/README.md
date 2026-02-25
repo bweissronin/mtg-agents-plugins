@@ -1,5 +1,7 @@
 # MTG Agent Visualizer CLI
 
+![MTG Agent Visualizer](../../docs/images/Example-1.png)
+
 Visualize your AI agents as Magic: The Gathering cards from the command line.
 
 ## Installation
