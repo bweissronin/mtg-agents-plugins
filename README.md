@@ -5,9 +5,7 @@
 IDE plugins that parse AI agent definitions from your codebase and render each agent as a visually accurate MTG card — complete with AI-generated artwork, mana cost, abilities, flavor text, and a "Battlefield" relationship board.
 
 <p align="center">
-  <img src="docs/images/Example-1.png" width="250" alt="Example Card 1">
-  <img src="docs/images/Example-2.png" width="250" alt="Example Card 2">
-  <img src="docs/images/Example-3.png" width="250" alt="Example Card 3">
+  <img src="docs/images/Social.png" width="250" alt="Social Preview">
 </p>
 
 <p align="center">
