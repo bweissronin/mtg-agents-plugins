@@ -64,6 +64,7 @@ class MarkdownParser : FrameworkParser {
         val creatureType = creatureTypePattern.find(frontmatter)?.groupValues?.get(1)?.trim()
         val artStyle = artStylePattern.find(frontmatter)?.groupValues?.get(1)?.trim()
         val customManaCost = manaCostPattern.find(frontmatter)?.groupValues?.get(1)?.trim()
+            ?.removeSurrounding("\"")?.removeSurrounding("'")
         val customPower = powerPattern.find(frontmatter)?.groupValues?.get(1)?.toIntOrNull()
         val customToughness = toughnessPattern.find(frontmatter)?.groupValues?.get(1)?.toIntOrNull()
         val customFlavorText = flavorTextPattern.find(frontmatter)?.groupValues?.get(1)?.trim()

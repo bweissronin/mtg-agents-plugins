@@ -139,7 +139,14 @@ function parseJson(content: string, filePath: string): CardData | null {
 
 function extractField(text: string, pattern: RegExp): string | undefined {
     const match = pattern.exec(text);
-    return match ? match[1].trim() : undefined;
+    if (!match) return undefined;
+    // Strip surrounding quotes if present
+    let value = match[1].trim();
+    if ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+    }
+    return value;
 }
 
 function parseColors(colorStr?: string): ManaColor[] {
