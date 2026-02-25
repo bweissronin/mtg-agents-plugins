@@ -8,10 +8,6 @@ IDE plugins that parse AI agent definitions from your codebase and render each a
   <img src="docs/images/Social.png" width="1024" alt="Social Preview">
 </p>
 
-<p align="center">
-  <img src="docs/images/Agents.png" width="700" alt="Agent Battlefield View">
-</p>
-
 ## Supported IDEs
 
 | IDE | Status | Install |
