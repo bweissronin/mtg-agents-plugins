@@ -1,0 +1,41 @@
+{
+  "name": "mtg-agent-visualizer",
+  "version": "1.0.0",
+  "description": "Visualize AI agents as Magic: The Gathering cards",
+  "main": "dist/index.js",
+  "bin": {
+    "mtg-agents": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts"
+  },
+  "keywords": [
+    "mtg",
+    "agents",
+    "visualization",
+    "ai",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "chokidar": "^3.5.3",
+    "commander": "^11.1.0",
+    "express": "^4.18.2",
+    "js-yaml": "^4.1.0",
+    "open": "^8.4.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.2"
+  }
+}

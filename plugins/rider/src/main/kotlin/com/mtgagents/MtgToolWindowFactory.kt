@@ -64,7 +64,30 @@ class MtgBattlefieldPanel(private val project: Project) : JPanel(BorderLayout())
         browser.loadHTML(html)
     }
 
+    private fun getManaIconsJson(): String {
+        val icons = mutableMapOf<String, String>()
+        val manaSymbols = listOf("W", "U", "B", "R", "G", "C")
+
+        for (symbol in manaSymbols) {
+            val resourcePath = "/icons/mana/${symbol.lowercase()}.png"
+            try {
+                val stream = javaClass.getResourceAsStream(resourcePath)
+                if (stream != null) {
+                    val bytes = stream.readBytes()
+                    val base64 = Base64.getEncoder().encodeToString(bytes)
+                    icons[symbol] = "data:image/png;base64,$base64"
+                    stream.close()
+                }
+            } catch (e: Exception) {
+                // Icon not found, will use fallback
+            }
+        }
+
+        return icons.entries.joinToString(",") { (k, v) -> "\"$k\": \"$v\"" }
+    }
+
     private fun generateBattlefieldHtml(battlefield: BattlefieldData): String {
+        val manaIconsJson = getManaIconsJson()
         val agentsJson = battlefield.agents.map { agent ->
             val artDataUrl = getArtDataUrl(agent.artUrl)
             val abilitiesJson = agent.abilities.map { ability ->
@@ -184,6 +207,28 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
     white-space: nowrap;
     border: 1px solid rgba(255,255,255,0.15);
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Mana cost overlay at top right */
+.card-mana {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 5;
+}
+
+.card-mana .mana-pip {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 /* Power/Toughness box overlay at bottom right */
@@ -528,6 +573,7 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
 <script>
 const agents = [$agentsJson];
 const relationships = [$relationshipsJson];
+const manaIcons = {$manaIconsJson};
 
 document.getElementById('agent-count').textContent = agents.length;
 document.getElementById('conn-count').textContent = relationships.length;
@@ -536,6 +582,27 @@ const nodes = [];
 const container = document.getElementById('battlefield');
 const nodesDiv = document.getElementById('nodes');
 const edgesSvg = document.getElementById('edges');
+
+// Mana colors for symbols (must be defined before card creation)
+const manaColors = {
+    'W': { bg: '#f9faf4', fg: '#000' },
+    'U': { bg: '#0e68ab', fg: '#fff' },
+    'B': { bg: '#150b00', fg: '#9a8c7c' },
+    'R': { bg: '#d3202a', fg: '#fff' },
+    'G': { bg: '#00733e', fg: '#fff' },
+    'C': { bg: '#ccc2c0', fg: '#000' }
+};
+
+function formatManaForMini(cost) {
+    if (!cost) return '';
+    const symbols = cost.match(/\{([^}]+)\}/g) || [];
+    return symbols.map(function(s) {
+        const symbol = s.replace(/[{}]/g, '');
+        const color = manaColors[symbol.toUpperCase()] || { bg: '#888', fg: '#fff' };
+        const isNumber = /^\d+$/.test(symbol);
+        return '<span class="mana-pip" style="background:' + (isNumber ? '#888' : color.bg) + ';color:' + (isNumber ? '#fff' : color.fg) + ';">' + symbol + '</span>';
+    }).join('');
+}
 
 // Create nodes
 agents.forEach((agent, i) => {
@@ -686,16 +753,16 @@ function toggleModalExpand() {
 
 function formatManaCost(cost) {
     if (!cost) return '';
-    // Convert {X} symbols to styled spans
     return cost.replace(/\{([^}]+)\}/g, function(m, symbol) {
-        const colors = {
-            'W': '#f9faf4', 'U': '#0e68ab', 'B': '#150b00',
-            'R': '#d3202a', 'G': '#00733e', 'C': '#ccc2c0'
-        };
-        const bgColor = colors[symbol.toUpperCase()] || '#888';
-        const textColor = ['W', 'C'].includes(symbol.toUpperCase()) ? '#000' : '#fff';
+        const upperSymbol = symbol.toUpperCase();
+        // Use PNG icon if available
+        if (manaIcons[upperSymbol]) {
+            return '<img src="' + manaIcons[upperSymbol] + '" style="width:18px;height:18px;vertical-align:middle;margin-left:2px;">';
+        }
+        // Fallback for numbers and unknown symbols
+        const color = manaColors[upperSymbol] || { bg: '#888', fg: '#fff' };
         const isNumber = /^\d+$/.test(symbol);
-        return '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:' + (isNumber ? '#888' : bgColor) + ';color:' + (isNumber ? '#fff' : textColor) + ';font-size:11px;font-weight:bold;margin-left:2px;border:1px solid rgba(0,0,0,0.3);">' + symbol + '</span>';
+        return '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:' + (isNumber ? '#888' : color.bg) + ';color:' + (isNumber ? '#fff' : color.fg) + ';font-size:11px;font-weight:bold;margin-left:2px;border:1px solid rgba(0,0,0,0.3);">' + symbol + '</span>';
     });
 }
 

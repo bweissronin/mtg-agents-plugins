@@ -28,3 +28,5 @@ local.properties
 
 # Reference images (development only)
 references/
+/plugins/cli/node_modules/
+/plugins/cli/dist/

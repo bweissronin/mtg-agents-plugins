@@ -432,6 +432,15 @@ function generateBorderlessCardHtml(card: CardData, artUrl: string, artPath?: st
  * Generate HTML for the battlefield view.
  */
 export function generateBattlefieldHtml(agents: CardData[], webview: vscode.Webview, context: vscode.ExtensionContext): string {
+    // Load mana icons as webview URIs
+    const manaSymbols = ['W', 'U', 'B', 'R', 'G'];
+    const manaIcons: Record<string, string> = {};
+    for (const sym of manaSymbols) {
+        const iconPath = vscode.Uri.joinPath(context.extensionUri, 'resources', 'icons', 'mana', `${sym.toLowerCase()}.png`);
+        manaIcons[sym] = webview.asWebviewUri(iconPath).toString();
+    }
+    const manaIconsJson = JSON.stringify(manaIcons);
+
     // Include full card data for zoom modal
     const agentsJson = JSON.stringify(agents.map(a => ({
         name: a.name,
@@ -517,6 +526,27 @@ export function generateBattlefieldHtml(agents: CardData[], webview: vscode.Webv
             color: #ffffff;
             border: 1px solid rgba(255,255,255,0.15);
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .mini-card .card-mana {
+            position: absolute;
+            top: 8px; right: 8px;
+            display: flex;
+            gap: 2px;
+            z-index: 5;
+        }
+
+        .mini-card .mana-pip {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid rgba(0,0,0,0.3);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
         .art-placeholder {
@@ -706,10 +736,11 @@ export function generateBattlefieldHtml(agents: CardData[], webview: vscode.Webv
 
     <script>
         const agents = ${agentsJson};
+        const manaIcons = ${manaIconsJson};
         const battlefield = document.getElementById('battlefield');
         let currentCardIndex = -1;
 
-        // Mana symbol colors
+        // Mana symbol colors (fallback for numbers)
         const manaColors = {
             'W': { bg: '#f8f6d8', fg: '#1a1a1a' },
             'U': { bg: '#0e67ab', fg: 'white' },
@@ -724,8 +755,24 @@ export function generateBattlefieldHtml(agents: CardData[], webview: vscode.Webv
             const symbols = manaCost.match(/\\{([^}]+)\\}/g) || [];
             return symbols.map(s => {
                 const sym = s.replace(/[{}]/g, '');
-                const color = manaColors[sym] || { bg: '#888', fg: 'white' };
+                const upperSym = sym.toUpperCase();
+                // Use PNG icon if available
+                if (manaIcons[upperSym]) {
+                    return '<img src="' + manaIcons[upperSym] + '" style="width:20px;height:20px;vertical-align:middle;margin-left:2px;">';
+                }
+                // Fallback for numbers and unknown symbols
+                const color = manaColors[upperSym] || { bg: '#888', fg: 'white' };
                 return '<div class="mana-symbol" style="background:' + color.bg + ';color:' + color.fg + ';">' + sym + '</div>';
+            }).join('');
+        }
+
+        function renderManaForMini(manaCost) {
+            if (!manaCost) return '';
+            const symbols = manaCost.match(/\\{([^}]+)\\}/g) || [];
+            return symbols.map(s => {
+                const sym = s.replace(/[{}]/g, '');
+                const color = manaColors[sym] || { bg: '#888', fg: 'white' };
+                return '<span class="mana-pip" style="background:' + color.bg + ';color:' + color.fg + ';">' + sym + '</span>';
             }).join('');
         }
 
