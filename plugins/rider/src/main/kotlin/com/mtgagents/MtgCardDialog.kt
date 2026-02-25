@@ -18,7 +18,8 @@ import javax.swing.JPanel
  */
 class MtgCardDialog(
     private val project: Project,
-    private val card: CardData
+    private val card: CardData,
+    private val artPath: String? = null
 ) : DialogWrapper(project, true) {
 
     private lateinit var browser: JBCefBrowser

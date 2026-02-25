@@ -15,16 +15,26 @@ export class ArtGenerator {
     }
 
     /**
-     * Generate art for a card. Tries cloud API, then falls back to bundled art.
+     * Generate art for a card. Checks for existing art next to agent file first,
+     * then generates and auto-saves next to the agent.
      */
     async generateArt(card: CardData, context: vscode.ExtensionContext): Promise<string | null> {
+        // 1. Check for existing art next to agent file (e.g., researcher.png next to researcher.md)
+        const existingArt = this.getExistingAgentArt(card);
+        if (existingArt) {
+            console.log(`MTG Art: Using existing art for ${card.name}`);
+            return existingArt;
+        }
+
         const cacheKey = card.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const cachedPath = path.join(this.cacheDir, `${cacheKey}.png`);
 
-        // Check cache first
+        // 2. Check cache
         if (fs.existsSync(cachedPath)) {
             console.log(`MTG Art: Using cached art for ${card.name}`);
-            return cachedPath;
+            // Also save to agent location for future use
+            const savedPath = this.saveArtNextToAgent(cachedPath, card);
+            return savedPath || cachedPath;
         }
 
         const config = vscode.workspace.getConfiguration('mtgAgent');
@@ -32,17 +42,26 @@ export class ArtGenerator {
         const apiKey = config.get<string>('stabilityApiKey', '');
 
         // Try Stability AI if configured
+        let generatedArt: string | null = null;
         if (provider === 'stabilityai' && apiKey) {
             try {
-                const result = await this.generateWithStabilityAI(card, apiKey, cachedPath);
-                if (result) return result;
+                generatedArt = await this.generateWithStabilityAI(card, apiKey, cachedPath);
             } catch (e) {
                 console.error('Stability AI generation failed:', e);
             }
         }
 
         // Fall back to bundled art
-        return this.getBundledFallbackArt(card, context, cacheKey);
+        if (!generatedArt) {
+            generatedArt = this.getBundledFallbackArt(card, context, cacheKey);
+        }
+
+        // 3. Auto-save generated art next to the agent file
+        if (generatedArt) {
+            return this.saveArtNextToAgent(generatedArt, card) || generatedArt;
+        }
+
+        return null;
     }
 
     private async generateWithStabilityAI(card: CardData, apiKey: string, outputPath: string): Promise<string | null> {
@@ -166,5 +185,49 @@ export class ArtGenerator {
         if (text.includes('write') || text.includes('creat')) return 'ethereal spirit scribe';
         if (text.includes('code') || text.includes('program')) return 'mechanical arcane automaton';
         return 'powerful mystical entity';
+    }
+
+    /**
+     * Get the path where the agent's art should be saved (next to the agent file).
+     * Convention: {agent_name}.png next to {agent_name}.md
+     */
+    private getAgentArtPath(card: CardData): string | null {
+        if (!card.sourceFile) return null;
+
+        const agentDir = path.dirname(card.sourceFile);
+        const baseName = path.basename(card.sourceFile, path.extname(card.sourceFile));
+        return path.join(agentDir, `${baseName}.png`);
+    }
+
+    /**
+     * Check for existing art file next to the agent file.
+     */
+    private getExistingAgentArt(card: CardData): string | null {
+        const artPath = this.getAgentArtPath(card);
+        if (!artPath) return null;
+
+        if (fs.existsSync(artPath)) {
+            console.log(`MTG Art: Found existing art at ${artPath}`);
+            return artPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Save art next to the agent file.
+     */
+    private saveArtNextToAgent(generatedArtPath: string, card: CardData): string | null {
+        const targetPath = this.getAgentArtPath(card);
+        if (!targetPath) return null;
+
+        try {
+            fs.copyFileSync(generatedArtPath, targetPath);
+            console.log(`MTG Art: Saved art to ${targetPath}`);
+            return targetPath;
+        } catch (e) {
+            console.error(`MTG Art: Failed to save art next to agent: ${e}`);
+            return null;
+        }
     }
 }

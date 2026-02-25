@@ -484,7 +484,7 @@ function refresh() {
         val service = project.getService(MtgAgentService::class.java)
         val card = service.getCachedCard(cardName)
         if (card != null) {
-            MtgCardDialog(project, card).show()
+            MtgCardDialog(project, card, card.artUrl).show()
         }
     }
 

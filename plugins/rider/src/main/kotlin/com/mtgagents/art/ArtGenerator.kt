@@ -23,26 +23,34 @@ class ArtGenerator {
 
     /**
      * Generate art for the given card based on the user's art source setting.
-     * Returns the path to the generated image.
+     * Checks for existing art next to agent file first, then generates and auto-saves.
+     * Returns the path to the image.
      */
     fun generateArt(card: CardData): String? {
         val settings = MtgSettings.getInstance()
 
         println("MTG Art Generator: Starting art generation for '${card.name}' using ${settings.artSource}")
 
-        return when (settings.artSource) {
+        // 1. Check for existing art next to agent file (e.g., researcher.png next to researcher.md)
+        getExistingAgentArt(card)?.let {
+            println("MTG Art Generator: Using existing art from $it")
+            return it
+        }
+
+        // 2. Generate art based on settings
+        val generatedArt: String? = when (settings.artSource) {
             ArtSource.LOCAL_SD -> {
                 // Try local Stable Diffusion, fall back to bundled
+                var result: String? = null
                 if (isBackendAvailable()) {
                     println("MTG Art Generator: Trying local SD backend ${settings.sdBackend} at ${settings.sdBaseUrl}")
                     try {
-                        val result = when (settings.sdBackend) {
+                        result = when (settings.sdBackend) {
                             SdBackend.AUTOMATIC1111 -> generateWithAutomatic1111(card, settings)
                             SdBackend.COMFYUI -> generateWithComfyUI(card, settings)
                         }
                         if (result != null) {
                             println("MTG Art Generator: Successfully generated art via local SD at $result")
-                            return result
                         }
                     } catch (e: Exception) {
                         println("MTG Art Generator: Local SD failed: ${e.message}")
@@ -50,20 +58,23 @@ class ArtGenerator {
                 } else {
                     println("MTG Art Generator: Local SD not available")
                 }
-                // Fall back to bundled
-                println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
-                getBundledFallbackArt(card)
+                // Fall back to bundled if generation failed
+                if (result == null) {
+                    println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
+                    result = getBundledFallbackArt(card)
+                }
+                result
             }
 
             ArtSource.STABILITY_AI -> {
                 // Try Stability AI cloud API, fall back to bundled
+                var result: String? = null
                 if (settings.stabilityApiKey.isNotBlank()) {
                     println("MTG Art Generator: Trying Stability AI cloud API")
                     try {
-                        val result = generateWithStabilityAI(card, settings)
+                        result = generateWithStabilityAI(card, settings)
                         if (result != null) {
                             println("MTG Art Generator: Successfully generated art via Stability AI at $result")
-                            return result
                         }
                     } catch (e: Exception) {
                         println("MTG Art Generator: Stability AI failed: ${e.message}")
@@ -71,9 +82,12 @@ class ArtGenerator {
                 } else {
                     println("MTG Art Generator: Stability AI selected but no API key configured")
                 }
-                // Fall back to bundled
-                println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
-                getBundledFallbackArt(card)
+                // Fall back to bundled if generation failed
+                if (result == null) {
+                    println("MTG Art Generator: Falling back to bundled art for color ${card.colorIdentity.firstOrNull() ?: ManaColor.BLUE}")
+                    result = getBundledFallbackArt(card)
+                }
+                result
             }
 
             ArtSource.BUNDLED_ONLY -> {
@@ -81,6 +95,13 @@ class ArtGenerator {
                 println("MTG Art Generator: Using bundled art only (no generation)")
                 getBundledFallbackArt(card)
             }
+        }
+
+        // 3. Auto-save generated art next to the agent file
+        return if (generatedArt != null) {
+            saveArtNextToAgent(generatedArt, card)
+        } else {
+            null
         }
     }
 
@@ -655,5 +676,52 @@ class ArtGenerator {
             .replace("\n", " ")
             .replace("\r", "")
             .replace("\t", " ")
+    }
+
+    /**
+     * Get the path where the agent's art should be saved (next to the agent file).
+     * Convention: {agent_name}.png next to {agent_name}.md
+     */
+    private fun getAgentArtPath(card: CardData): String? {
+        val sourceFile = card.sourceFile
+        if (sourceFile.isBlank()) return null
+
+        val agentFile = File(sourceFile)
+        if (!agentFile.exists()) return null
+
+        // Get the base name without extension and create .png path
+        val baseName = agentFile.nameWithoutExtension
+        return File(agentFile.parent, "$baseName.png").absolutePath
+    }
+
+    /**
+     * Check for existing art file next to the agent file.
+     */
+    private fun getExistingAgentArt(card: CardData): String? {
+        val artPath = getAgentArtPath(card) ?: return null
+        val artFile = File(artPath)
+
+        return if (artFile.exists()) {
+            println("MTG Art Generator: Found existing art at $artPath")
+            artPath
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Save art next to the agent file.
+     */
+    private fun saveArtNextToAgent(generatedArtPath: String, card: CardData): String? {
+        val targetPath = getAgentArtPath(card) ?: return generatedArtPath
+
+        return try {
+            File(generatedArtPath).copyTo(File(targetPath), overwrite = true)
+            println("MTG Art Generator: Saved art to $targetPath")
+            targetPath
+        } catch (e: Exception) {
+            println("MTG Art Generator: Failed to save art next to agent: ${e.message}")
+            generatedArtPath  // Return original path if copy fails
+        }
     }
 }

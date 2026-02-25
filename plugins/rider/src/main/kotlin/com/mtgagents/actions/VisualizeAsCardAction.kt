@@ -44,18 +44,8 @@ class VisualizeAsCardAction : AnAction() {
                     indicator.isIndeterminate = true
                     indicator.text = "Generating art for ${card.name}..."
 
-                    // Check cache first
-                    val cacheKey = card.name.lowercase().replace(Regex("[^a-z0-9]"), "_")
-                    var artUrl = artGenerator.getCachedArt(cacheKey)
-
-                    // Generate if not cached
-                    if (artUrl == null) {
-                        indicator.text = "Calling Stable Diffusion..."
-                        artUrl = artGenerator.generateArt(card)
-                        if (artUrl != null) {
-                            artGenerator.cacheArt(cacheKey, artUrl)
-                        }
-                    }
+                    // generateArt handles: 1) existing art next to agent, 2) generation, 3) auto-save
+                    val artUrl = artGenerator.generateArt(card)
 
                     // Create updated card with art URL
                     val cardWithArt = if (artUrl != null) {
@@ -67,7 +57,7 @@ class VisualizeAsCardAction : AnAction() {
                     // Show dialog on EDT
                     ApplicationManager.getApplication().invokeLater {
                         service.cacheCard(cardWithArt.name, cardWithArt)
-                        MtgCardDialog(project, cardWithArt).show()
+                        MtgCardDialog(project, cardWithArt, artUrl).show()
                     }
                 }
             })

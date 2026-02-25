@@ -8,6 +8,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -15,20 +16,110 @@
             padding: 20px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
+        .card-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: #e2e8f0;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            background: linear-gradient(135deg, #5a6578 0%, #3d4758 100%);
+            border-color: #718096;
+        }
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        .action-btn.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-color: #48bb78;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <!-- Card will be rendered here by JavaScript -->
     <div id="card-container"></div>
 
+    <!-- Action buttons -->
+    <div class="card-actions">
+        <button id="save-avatar-btn" class="action-btn" onclick="saveAvatar()">
+            💾 Save Avatar
+        </button>
+    </div>
+
     <script src="js/card-engine.js"></script>
     <script>
         // Initialize card engine
         const cardEngine = new MtgCardEngine();
 
-        // Override renderCard to target container
-        window.renderCard = function(cardData) {
+        // Store current card data for avatar saving
+        let currentCardData = null;
+        let currentArtPath = null;
+
+        // Override renderCard to target container and store data
+        window.renderCard = function(cardData, artPath) {
+            currentCardData = cardData;
+            currentArtPath = artPath || null;
             cardEngine.renderCard(cardData, '#card-container');
+        };
+
+        // Save avatar function - sends message to Java
+        window.saveAvatar = function() {
+            const btn = document.getElementById('save-avatar-btn');
+            if (!currentCardData) {
+                alert('No card data available');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Saving...';
+
+            // Send message to JCEF bridge
+            if (window.cefQuery) {
+                window.cefQuery({
+                    request: JSON.stringify({
+                        action: 'saveAvatar',
+                        cardName: currentCardData.name,
+                        sourceFile: currentCardData.sourceFile,
+                        artPath: currentArtPath
+                    }),
+                    onSuccess: function(response) {
+                        btn.textContent = '✓ Saved!';
+                        btn.classList.add('success');
+                        setTimeout(() => {
+                            btn.textContent = '💾 Save Avatar';
+                            btn.classList.remove('success');
+                            btn.disabled = false;
+                        }, 2000);
+                    },
+                    onFailure: function(errorCode, errorMessage) {
+                        btn.textContent = '❌ Failed';
+                        alert('Failed to save avatar: ' + errorMessage);
+                        setTimeout(() => {
+                            btn.textContent = '💾 Save Avatar';
+                            btn.disabled = false;
+                        }, 2000);
+                    }
+                });
+            } else {
+                // Fallback for non-JCEF environments (dev testing)
+                console.log('Save avatar requested:', currentCardData.name);
+                btn.textContent = '💾 Save Avatar';
+                btn.disabled = false;
+                alert('Save avatar only works in the IDE plugin');
+            }
         };
 
         // Example card for testing (will be replaced by plugin data)

@@ -37,7 +37,8 @@ class GenerateDeckAction : AnAction() {
 
                 println("MTG GenerateDeck: Found ${battlefield.agents.size} agents to process")
 
-                // Generate art and cache all found agents
+                // Generate art for all found agents
+                // generateArt handles: 1) existing art next to agent, 2) generation, 3) auto-save
                 battlefield.agents.forEachIndexed { index, card ->
                     if (indicator.isCanceled) return
 
@@ -45,20 +46,11 @@ class GenerateDeckAction : AnAction() {
                     indicator.text = "Generating art for ${card.name} (${index + 1}/$totalAgents)..."
                     println("MTG GenerateDeck: Processing agent '${card.name}' (${index + 1}/$totalAgents)")
 
-                    // Check cache first
-                    val cacheKey = card.name.lowercase().replace(Regex("[^a-z0-9]"), "_")
-                    var artUrl = artGenerator.getCachedArt(cacheKey)
-                    println("MTG GenerateDeck: Cache key '$cacheKey', cached art URL: $artUrl")
+                    val artUrl = artGenerator.generateArt(card)
+                    println("MTG GenerateDeck: Art result: ${artUrl ?: "NULL"}")
 
-                    // Generate if not cached
-                    if (artUrl == null) {
-                        println("MTG GenerateDeck: Calling artGenerator.generateArt()...")
-                        artUrl = artGenerator.generateArt(card)
-                        println("MTG GenerateDeck: Art generation result: ${artUrl ?: "NULL"}")
-                        if (artUrl != null) {
-                            artGenerator.cacheArt(cacheKey, artUrl)
-                            generatedCount++
-                        }
+                    if (artUrl != null) {
+                        generatedCount++
                     }
 
                     // Cache the card with art URL

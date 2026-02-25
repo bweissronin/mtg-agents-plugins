@@ -76,7 +76,7 @@ async function visualizeCard(context: vscode.ExtensionContext, uri?: vscode.Uri)
         }
     );
 
-    panel.webview.html = generateCardHtml(cardWithArt, panel.webview, context);
+    panel.webview.html = generateCardHtml(cardWithArt, panel.webview, context, artPath);
 }
 
 async function generateDeck(context: vscode.ExtensionContext) {

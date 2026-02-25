@@ -6,17 +6,17 @@ import { CardData, ManaColor, CardStyle } from './parser';
 /**
  * Generate HTML for a single card view.
  */
-export function generateCardHtml(card: CardData, webview: vscode.Webview, context: vscode.ExtensionContext): string {
+export function generateCardHtml(card: CardData, webview: vscode.Webview, context: vscode.ExtensionContext, artPath?: string | null): string {
     const artUri = card.artUrl ? webview.asWebviewUri(vscode.Uri.file(card.artUrl)) : null;
 
     if (card.cardStyle === CardStyle.BORDERLESS) {
-        return generateBorderlessCardHtml(card, artUri?.toString() || '');
+        return generateBorderlessCardHtml(card, artUri?.toString() || '', artPath);
     }
 
-    return generateStandardCardHtml(card, artUri?.toString() || '', webview, context);
+    return generateStandardCardHtml(card, artUri?.toString() || '', webview, context, artPath);
 }
 
-function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscode.Webview, context: vscode.ExtensionContext): string {
+function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscode.Webview, context: vscode.ExtensionContext, artPath?: string | null): string {
     const frameColor = getFrameColor(card.colorIdentity);
     const manaSymbols = renderManaCost(card.manaCost, webview, context);
 
@@ -182,7 +182,7 @@ function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscod
 </html>`;
 }
 
-function generateBorderlessCardHtml(card: CardData, artUrl: string): string {
+function generateBorderlessCardHtml(card: CardData, artUrl: string, artPath?: string | null): string {
     return `<!DOCTYPE html>
 <html>
 <head>
