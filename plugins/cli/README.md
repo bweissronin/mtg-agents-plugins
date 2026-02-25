@@ -61,6 +61,63 @@ mtg-agents config set art.source stability
 mtg-agents config set style.cardStyle borderless
 ```
 
+## Art Generation
+
+The CLI automatically generates card art for your agents. By default, it uses bundled fallback art based on the agent's color. For unique AI-generated art, you can configure Stability AI.
+
+### Art Resolution Order
+
+1. **Existing art** - Looks for `{agent_name}.png` next to the agent file
+2. **Cached art** - Previously generated art in `~/.cache/mtg-agents/art/`
+3. **Stability AI** - Generates unique art via API (if configured)
+4. **Fallback art** - Color-based bundled art (blue scholar, red goblin, etc.)
+
+### Setting Up Stability AI
+
+1. **Get an API key** from [Stability AI](https://platform.stability.ai/):
+   - Create an account at https://platform.stability.ai/
+   - Go to API Keys in your account settings
+   - Generate a new API key
+
+2. **Configure the CLI**:
+   ```bash
+   # Set Stability AI as the art source
+   mtg-agents config set art.source stability
+
+   # Set your API key
+   mtg-agents config set art.stabilityApiKey sk-your-api-key-here
+   ```
+
+   Or use environment variables:
+   ```bash
+   export MTG_AGENTS_ART_SOURCE=stability
+   export MTG_AGENTS_STABILITY_KEY=sk-your-api-key-here
+   ```
+
+3. **Generate cards with AI art**:
+   ```bash
+   mtg-agents card ./agents/researcher.md
+   mtg-agents battlefield ./agents/
+   ```
+
+### Skipping Art Generation
+
+Use `--no-art` to skip art generation entirely:
+```bash
+mtg-agents card ./agents/researcher.md --no-art
+mtg-agents battlefield ./agents/ --no-art
+```
+
+### Custom Art Prompts
+
+Add `art_prompt` to your agent's frontmatter for custom AI-generated art:
+```yaml
+---
+name: researcher
+art_prompt: "a wise wizard studying ancient scrolls in a magical library"
+---
+```
+
 ## Configuration File
 
 Create `.mtg-agents.json` in your project or `~/.config/mtg-agents/config.json` globally:
