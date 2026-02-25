@@ -23,6 +23,7 @@ function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscod
     return `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <style>
         body {
             margin: 0;
@@ -125,11 +126,20 @@ function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscod
         }
 
         .ability {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .ability-name {
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ability-desc {
+            font-size: 10px;
+            color: #2a2a2a;
+            font-style: italic;
         }
 
         .flavor-text {
@@ -171,7 +181,7 @@ function generateStandardCardHtml(card: CardData, artUrl: string, webview: vscod
                 </div>
                 <div class="type-bar">${escapeHtml(card.typeLine)}</div>
                 <div class="text-box">
-                    ${card.abilities.map(a => `<div class="ability"><span class="ability-name">${escapeHtml(a.name)}:</span> ${escapeHtml(a.description)}</div>`).join('')}
+                    ${card.abilities.map(a => `<div class="ability"><div class="ability-name">${escapeHtml(a.name)}</div>${a.description ? `<div class="ability-desc">${escapeHtml(a.description)}</div>` : ''}</div>`).join('')}
                     ${card.flavorText ? `<div class="flavor-text">${escapeHtml(card.flavorText)}</div>` : ''}
                 </div>
             </div>
@@ -186,6 +196,7 @@ function generateBorderlessCardHtml(card: CardData, artUrl: string, artPath?: st
     return `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <style>
         body {
             margin: 0;
@@ -270,41 +281,110 @@ function generateBorderlessCardHtml(card: CardData, artUrl: string, artPath?: st
         }
 
         .type-bar {
+            position: absolute;
+            top: 310px;
+            left: 15px;
+            right: 15px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(4px);
             padding: 6px 12px;
             font-size: 13px;
             color: white;
             border-radius: 4px;
-            margin-bottom: 8px;
+            transition: top 0.3s ease;
+            z-index: 10;
+        }
+
+        .type-bar.shifted {
+            top: 56px;
         }
 
         .text-box {
-            background: rgba(245,240,225,0.95);
+            position: absolute;
+            top: 350px;
+            bottom: 50px;
+            left: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 6px;
-            padding: 12px;
+            padding: 10px;
+            padding-bottom: 28px;
             font-size: 11px;
-            line-height: 1.4;
+            line-height: 1.3;
+            border: 1px solid rgba(255,255,255,0.15);
+            overflow-y: auto;
+            transition: top 0.3s ease;
         }
 
-        .flavor-text {
+        .text-box.expanded {
+            top: 90px;
+        }
+
+        .more-btn {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 12px;
+            padding: 3px 14px;
+            font-size: 9px;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .more-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .ability {
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        .ability-name {
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #ffffff;
+        }
+
+        .ability-desc {
+            font-size: 9px;
+            color: rgba(255,255,255,0.85);
             font-style: italic;
-            color: #444;
-            margin-top: 8px;
         }
 
         .pt-box {
             position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background: linear-gradient(180deg, #f5f0e1 0%, #d5d0c5 100%);
-            border: 2px solid #1a1a1a;
-            border-radius: 6px;
-            padding: 4px 12px;
+            bottom: 12px;
+            right: 14px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            padding: 3px 10px;
             font-family: 'Cinzel', Georgia, serif;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 15px;
+            color: #ffffff;
             z-index: 2;
+        }
+
+        .collector-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 15px;
+            right: 80px;
+            font-size: 9px;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .collector-bar .flavor-text {
+            font-style: italic;
         }
     </style>
 </head>
@@ -316,16 +396,34 @@ function generateBorderlessCardHtml(card: CardData, artUrl: string, artPath?: st
                 <span class="card-name">${escapeHtml(card.name)}</span>
                 <div class="mana-cost">${renderManaCostSimple(card.manaCost)}</div>
             </div>
-            <div class="bottom-section">
-                <div class="type-bar">${escapeHtml(card.typeLine)}</div>
-                <div class="text-box">
-                    ${card.abilities.slice(0, 2).map(a => `<div><b>${escapeHtml(a.name)}</b></div>`).join('')}
-                    ${card.flavorText ? `<div class="flavor-text">${escapeHtml(card.flavorText)}</div>` : ''}
-                </div>
-            </div>
+        </div>
+        <div class="type-bar" id="typeBar">${escapeHtml(card.typeLine)}</div>
+        <div class="text-box" id="textBox">
+            ${card.abilities.map(a => `<div class="ability"><div class="ability-name">${escapeHtml(a.name)}</div>${a.description ? `<div class="ability-desc">${escapeHtml(a.description)}</div>` : ''}</div>`).join('')}
+            ${card.abilities.length > 2 ? '<button class="more-btn" id="moreBtn" onclick="toggleExpand()">▼ more</button>' : ''}
         </div>
         <div class="pt-box">${card.power}/${card.toughness}</div>
+        <div class="collector-bar">${card.flavorText ? `<span class="flavor-text">"${escapeHtml(card.flavorText)}"</span>` : ''}</div>
     </div>
+    <script>
+        let expanded = false;
+        function toggleExpand() {
+            expanded = !expanded;
+            const textBox = document.getElementById('textBox');
+            const typeBar = document.getElementById('typeBar');
+            const btn = document.getElementById('moreBtn');
+
+            if (expanded) {
+                textBox.classList.add('expanded');
+                typeBar.classList.add('shifted');
+                btn.textContent = '▲ less';
+            } else {
+                textBox.classList.remove('expanded');
+                typeBar.classList.remove('shifted');
+                btn.textContent = '▼ more';
+            }
+        }
+    </script>
 </body>
 </html>`;
 }
@@ -345,6 +443,7 @@ export function generateBattlefieldHtml(agents: CardData[], webview: vscode.Webv
     return `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {

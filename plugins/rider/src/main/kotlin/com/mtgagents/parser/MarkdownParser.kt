@@ -156,6 +156,7 @@ class MarkdownParser : FrameworkParser {
 
     private fun extractToolsFromBody(body: String): List<Ability> {
         val tools = mutableListOf<Ability>()
+        val lines = body.lines()
 
         // Look for ## headers as major capabilities
         val headerPattern = Regex("""^##\s+(.+)$""", RegexOption.MULTILINE)
@@ -167,9 +168,10 @@ class MarkdownParser : FrameworkParser {
                                   "Quality Assurance Checklist")) {
                 // Check if it looks like a capability section
                 if (header.contains("&") || header.length < 40) {
+                    val description = extractDescriptionAfterHeader(body, match.range.last, 2)
                     tools.add(Ability(
                         name = header,
-                        description = "Capability",
+                        description = description,
                         abilityType = AbilityType.ACTIVATED
                     ))
                 }
@@ -181,9 +183,10 @@ class MarkdownParser : FrameworkParser {
         subHeaderPattern.findAll(body).take(5).forEach { match ->
             val header = match.groupValues[1].trim()
             if (header.length < 50) {
+                val description = extractDescriptionAfterHeader(body, match.range.last, 3)
                 tools.add(Ability(
                     name = header,
-                    description = "Tool",
+                    description = description,
                     abilityType = AbilityType.ACTIVATED
                 ))
             }
@@ -195,9 +198,10 @@ class MarkdownParser : FrameworkParser {
             boldPattern.findAll(body).take(5).forEach { match ->
                 val item = match.groupValues[1].trim()
                 if (item.length < 30 && !item.contains(":")) {
+                    val description = extractDescriptionAfterMatch(body, match.range.last)
                     tools.add(Ability(
                         name = item,
-                        description = "Feature",
+                        description = description,
                         abilityType = AbilityType.STATIC
                     ))
                 }
@@ -205,6 +209,50 @@ class MarkdownParser : FrameworkParser {
         }
 
         return tools.take(5).distinctBy { it.name }
+    }
+
+    /**
+     * Extract the first meaningful sentence/phrase after a header.
+     */
+    private fun extractDescriptionAfterHeader(body: String, startPos: Int, headerLevel: Int): String {
+        val remaining = body.substring(startPos.coerceAtMost(body.length))
+        val lines = remaining.lines().drop(1) // Skip the header line itself
+
+        for (line in lines) {
+            val trimmed = line.trim()
+            // Stop at next header
+            if (trimmed.startsWith("#")) break
+            // Skip empty lines
+            if (trimmed.isEmpty()) continue
+            // Skip list markers, get content
+            val content = trimmed
+                .removePrefix("-").removePrefix("*").removePrefix(">")
+                .trim()
+            if (content.isNotEmpty() && content.length > 5) {
+                // Get first sentence, max 80 chars
+                val firstSentence = content.split(Regex("""[.!?]""")).firstOrNull()?.trim() ?: content
+                return firstSentence.take(80)
+            }
+        }
+        return ""
+    }
+
+    /**
+     * Extract description after a bold match (look for colon or next text).
+     */
+    private fun extractDescriptionAfterMatch(body: String, startPos: Int): String {
+        val remaining = body.substring(startPos.coerceAtMost(body.length))
+        // Look for text after colon or dash
+        val colonMatch = Regex("""^[*]*\s*[:—-]\s*([^*\n]+)""").find(remaining)
+        if (colonMatch != null) {
+            return colonMatch.groupValues[1].trim().take(80)
+        }
+        // Otherwise get next non-empty content
+        val nextContent = Regex("""^\s*([^*#\n][^\n]{5,})""").find(remaining)
+        if (nextContent != null) {
+            return nextContent.groupValues[1].trim().take(80)
+        }
+        return ""
     }
 
     private fun extractFlavorText(body: String, description: String?): String? {

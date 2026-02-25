@@ -55,7 +55,10 @@ class MtgCardDialog(
         val frameColors = getFrameColors(card.colorIdentity)
         val manaSymbolsHtml = parseManaSymbols(card.manaCost)
         val abilitiesHtml = card.abilities.joinToString("") { ability ->
-            """<div class="ability"><span class="ability-name">${escapeHtml(ability.name)}</span></div>"""
+            val desc = if (ability.description.isNotBlank()) {
+                """<div class="ability-desc">${escapeHtml(ability.description)}</div>"""
+            } else ""
+            """<div class="ability"><div class="ability-name">${escapeHtml(ability.name)}</div>$desc</div>"""
         }
         val flavorHtml = if (card.flavorText != null) {
             """<div class="flavor-text">"${escapeHtml(card.flavorText)}"</div>"""
@@ -67,6 +70,7 @@ class MtgCardDialog(
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -289,14 +293,25 @@ body {
 }
 
 .ability {
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 12px;
+    line-height: 1.3;
     color: #1a1a1a;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .ability-name {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 1px;
+}
+
+.ability-desc {
+    font-weight: 400;
+    font-size: 11px;
+    color: #2a2a2a;
+    font-style: italic;
 }
 
 .flavor-text {
@@ -395,7 +410,10 @@ body {
         val frameColors = getFrameColors(card.colorIdentity)
         val manaSymbolsHtml = parseManaSymbols(card.manaCost)
         val abilitiesHtml = card.abilities.joinToString("") { ability ->
-            """<div class="ability"><span class="ability-name">${escapeHtml(ability.name)}</span></div>"""
+            val desc = if (ability.description.isNotBlank()) {
+                """<div class="ability-desc">${escapeHtml(ability.description)}</div>"""
+            } else ""
+            """<div class="ability"><div class="ability-name">${escapeHtml(ability.name)}</div>$desc</div>"""
         }
         val flavorHtml = if (card.flavorText != null) {
             """<div class="flavor-text">"${escapeHtml(card.flavorText)}"</div>"""
@@ -408,6 +426,7 @@ body {
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -513,7 +532,7 @@ body {
 /* Type line - floating */
 .type-line {
     position: absolute;
-    top: 280px; left: 12px; right: 12px;
+    top: 310px; left: 12px; right: 12px;
     height: 26px;
     display: flex;
     justify-content: space-between;
@@ -528,70 +547,100 @@ body {
     font-family: 'Cinzel', serif;
     font-size: 11px;
     color: #fff;
+    z-index: 10;
+    transition: top 0.3s ease;
 }
 
-/* Text box - semi-transparent at bottom */
+.type-line.shifted {
+    top: 56px;
+}
+
+/* Text box - semi-transparent dark */
 .text-box {
     position: absolute;
+    top: 342px;
     bottom: ${if (hasPT) "50px" else "30px"};
     left: 12px; right: 12px;
-    max-height: 180px;
-    background: linear-gradient(180deg,
-        rgba(245,242,235,0.92) 0%,
-        rgba(235,232,225,0.95) 100%
-    );
+    background: rgba(0, 0, 0, 0.7);
     border-radius: 6px;
-    border: 1px solid rgba(0,0,0,0.2);
-    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 10px;
+    padding-bottom: 28px;
     overflow-y: auto;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    transition: top 0.3s ease;
+}
+
+.text-box.expanded {
+    top: 88px;
+    overflow-y: auto;
+}
+
+/* More/Less button */
+.more-btn {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 3px 14px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    z-index: 20;
+    transition: background 0.2s ease;
+}
+
+.more-btn:hover {
+    background: rgba(255,255,255,0.25);
 }
 
 .ability {
     font-size: 12px;
     line-height: 1.4;
-    color: #1a1a1a;
+    color: #ffffff;
     margin-bottom: 6px;
 }
 
-.ability-name { font-weight: 600; }
+.ability-name { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 1px; color: #ffffff; }
+.ability-desc { font-weight: 400; font-size: 10px; color: rgba(255,255,255,0.85); font-style: italic; }
 
-.flavor-text {
-    font-style: italic;
-    color: #3a3a3a;
-    font-size: 11px;
-    border-top: 1px solid rgba(0,0,0,0.15);
-    padding-top: 6px;
-    margin-top: 4px;
-}
-
-/* P/T box */
+/* P/T box - dark transparent */
 .pt-box {
     position: absolute;
     bottom: 12px; right: 14px;
-    min-width: 50px;
-    height: 30px;
+    min-width: 42px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 10px;
-    background: linear-gradient(180deg, #f5f0e1 0%, #d5d0c5 100%);
-    border: 2px solid #1a1a1a;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    padding: 0 8px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    backdrop-filter: blur(4px);
     font-family: 'Cinzel', serif;
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: #ffffff;
 }
 
-/* Collector info */
+/* Collector info with flavor text */
 .collector-bar {
     position: absolute;
-    bottom: 8px; left: 14px;
+    bottom: 8px; left: 14px; right: ${if (hasPT) "80px" else "14px"};
     font-size: 8px;
     color: rgba(255,255,255,0.7);
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    line-height: 1.4;
+}
+
+.collector-bar .flavor-text {
+    font-style: italic;
+    color: rgba(255,255,255,0.9);
+    font-size: 9px;
 }
 </style>
 </head>
@@ -609,13 +658,34 @@ body {
         <span>${escapeHtml(card.typeLine)}</span>
         <span>${getSetSymbol(card.setSymbol)}</span>
     </div>
-    <div class="text-box">
+    <div class="text-box" id="textBox">
         $abilitiesHtml
-        $flavorHtml
+        ${if (card.abilities.size > 2) """<button class="more-btn" id="moreBtn" onclick="toggleExpand()">▼ more</button>""" else ""}
     </div>
     ${if (hasPT) """<div class="pt-box">${card.power}/${card.toughness}</div>""" else ""}
-    <div class="collector-bar">${escapeHtml(card.collectorInfo)} ✦ AI Generated</div>
+    <div class="collector-bar">
+        ${if (card.flavorText != null) """<span class="flavor-text">"${escapeHtml(card.flavorText)}"</span> — """ else ""}${escapeHtml(card.collectorInfo)}
+    </div>
 </div>
+<script>
+let expanded = false;
+function toggleExpand() {
+    expanded = !expanded;
+    const textBox = document.getElementById('textBox');
+    const typeLine = document.querySelector('.type-line');
+    const btn = document.getElementById('moreBtn');
+
+    if (expanded) {
+        textBox.classList.add('expanded');
+        typeLine.classList.add('shifted');
+        btn.textContent = '▲ less';
+    } else {
+        textBox.classList.remove('expanded');
+        typeLine.classList.remove('shifted');
+        btn.textContent = '▼ more';
+    }
+}
+</script>
 </body>
 </html>
         """.trimIndent()
