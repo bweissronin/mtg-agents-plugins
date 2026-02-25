@@ -67,12 +67,20 @@ class MtgBattlefieldPanel(private val project: Project) : JPanel(BorderLayout())
     private fun generateBattlefieldHtml(battlefield: BattlefieldData): String {
         val agentsJson = battlefield.agents.map { agent ->
             val artDataUrl = getArtDataUrl(agent.artUrl)
+            val abilitiesJson = agent.abilities.map { ability ->
+                """{"name": "${escapeJs(ability.name)}", "description": "${escapeJs(ability.description)}"}"""
+            }.joinToString(",")
             """{
                 "name": "${escapeJs(agent.name)}",
                 "power": ${agent.power},
                 "toughness": ${agent.toughness},
                 "color": "${agent.colorIdentity.firstOrNull()?.name?.lowercase() ?: "blue"}",
-                "artUrl": ${if (artDataUrl != null) "\"${escapeJs(artDataUrl)}\"" else "null"}
+                "artUrl": ${if (artDataUrl != null) "\"${escapeJs(artDataUrl)}\"" else "null"},
+                "manaCost": "${escapeJs(agent.manaCost)}",
+                "typeLine": "${escapeJs(agent.typeLine)}",
+                "abilities": [$abilitiesJson],
+                "flavorText": ${if (agent.flavorText != null) "\"${escapeJs(agent.flavorText)}\"" else "null"},
+                "collectorInfo": "${escapeJs(agent.collectorInfo)}"
             }"""
         }.joinToString(",")
 
@@ -103,109 +111,52 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
 .edge.SUB_AGENT { stroke: #FF9800; stroke-width: 3; }
 .edge.REFERENCE { stroke: #9E9E9E; stroke-dasharray: 3,3; opacity: 0.7; }
 
-/* Mini Card - MTG Style */
+/* Mini Card - Full Art Style */
 .mini-card {
     position: absolute;
     width: 150px;
     height: 200px;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: move;
     user-select: none;
     transition: transform 0.15s, box-shadow 0.15s;
     z-index: 10;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3);
 }
 
 .mini-card:hover {
     transform: translateY(-4px) scale(1.02);
     z-index: 50;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 16px 40px rgba(0,0,0,0.4);
 }
 
-/* Card outer border (black) */
-.mini-card-border {
+/* Full art background */
+.mini-card-art {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: #0a0a0a;
-    border-radius: 8px;
-    box-shadow:
-        0 4px 8px rgba(0,0,0,0.4),
-        0 8px 24px rgba(0,0,0,0.3);
+    background: linear-gradient(180deg, #1a1a2e 0%, #0d0d14 100%);
 }
 
-.mini-card:hover .mini-card-border {
-    box-shadow:
-        0 8px 16px rgba(0,0,0,0.5),
-        0 16px 40px rgba(0,0,0,0.4);
-}
-
-/* Card frame (colored) */
-.mini-card-frame {
-    position: absolute;
-    top: 4px; left: 4px; right: 4px; bottom: 4px;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    padding: 6px;
-}
-
-/* Color variants */
-.mini-card.white .mini-card-frame {
-    background: linear-gradient(180deg, #f8f4e8 0%, #e5e0d0 50%, #d8d2c4 100%);
-}
-.mini-card.blue .mini-card-frame {
-    background: linear-gradient(180deg, #2090d0 0%, #1068a8 50%, #044870 100%);
-}
-.mini-card.black .mini-card-frame {
-    background: linear-gradient(180deg, #504848 0%, #282020 50%, #0c0808 100%);
-}
-.mini-card.red .mini-card-frame {
-    background: linear-gradient(180deg, #d85040 0%, #a82818 50%, #700c08 100%);
-}
-.mini-card.green .mini-card-frame {
-    background: linear-gradient(180deg, #408040 0%, #205820 50%, #083808 100%);
-}
-.mini-card.colorless .mini-card-frame {
-    background: linear-gradient(180deg, #c8d4dc 0%, #98a8b4 50%, #788888 100%);
-}
-
-/* Card name bar */
-.card-name {
-    font-family: 'Cinzel', serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-align: center;
-    padding: 4px 6px;
-    background: linear-gradient(180deg, #f5f0e1 0%, #d8d2c4 100%);
-    border: 1px solid #1a1a1a;
-    border-radius: 3px 3px 0 0;
-    color: #1a1a1a;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
-}
-
-/* Card art box */
-.card-art {
-    flex: 1;
-    margin: 4px 0;
-    background: #1a1a1a;
-    border: 2px solid #0a0a0a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
-}
-
-.card-art img {
+.mini-card-art img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
 .art-placeholder {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0d0d14 100%);
+}
+
+.art-placeholder::after {
+    content: '';
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(100,150,255,0.4) 0%, transparent 70%);
     animation: pulse 3s ease-in-out infinite;
@@ -216,21 +167,39 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
     50% { transform: scale(1.2); opacity: 0.7; }
 }
 
-/* Power/Toughness box */
-.card-pt {
+/* Name bar overlay at top */
+.card-name {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px;
     font-family: 'Cinzel', serif;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     text-align: center;
-    padding: 3px 8px;
-    background: linear-gradient(180deg, #f5f0e1 0%, #d5d0c5 100%);
-    border: 1px solid #1a1a1a;
-    border-radius: 4px;
-    color: #1a1a1a;
-    align-self: flex-end;
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.5),
-        0 2px 4px rgba(0,0,0,0.3);
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
+    color: #ffffff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.15);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Power/Toughness box overlay at bottom right */
+.card-pt {
+    position: absolute;
+    bottom: 8px; right: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.15);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
 /* Controls */
@@ -338,6 +307,190 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
     font-size: 24px;
     margin-bottom: 10px;
 }
+
+/* Card Zoom Modal */
+.card-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+.card-modal.visible { display: flex; }
+
+.modal-content {
+    animation: zoomIn 0.2s ease-out;
+    position: relative;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Full card in modal */
+.full-card {
+    width: 320px;
+    height: 450px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(100,150,255,0.3);
+}
+
+.full-card-art {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0d0d14 100%);
+}
+.full-card-art img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+/* Name bar overlay */
+.full-name-bar {
+    position: absolute;
+    top: 16px; left: 16px; right: 16px;
+    background: linear-gradient(180deg, rgba(30,30,40,0.95) 0%, rgba(20,20,30,0.95) 100%);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.full-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+}
+.full-mana-cost {
+    font-size: 14px;
+    color: #ffd700;
+}
+
+/* Type line */
+.full-type-line {
+    position: absolute;
+    top: 200px; left: 16px; right: 16px;
+    background: rgba(0,0,0,0.8);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: top 0.3s ease;
+}
+.full-type-line.shifted { top: 56px; }
+
+/* Text box */
+.full-text-box {
+    position: absolute;
+    top: 236px; left: 16px; right: 16px; bottom: 60px;
+    background: rgba(0,0,0,0.75);
+    border-radius: 8px;
+    padding: 12px;
+    padding-bottom: 28px;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: top 0.3s ease;
+}
+.full-text-box.expanded { top: 88px; }
+.full-text-box::-webkit-scrollbar { width: 4px; }
+.full-text-box::-webkit-scrollbar-track { background: transparent; }
+.full-text-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+.full-ability { margin-bottom: 10px; }
+.full-ability:last-child { margin-bottom: 0; }
+.full-ability-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+.full-ability-desc {
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* More/less button */
+.modal-more-btn {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 3px 14px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    z-index: 20;
+}
+.modal-more-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* Collector bar */
+.full-collector-bar {
+    position: absolute;
+    bottom: 16px; left: 16px; right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.full-flavor {
+    font-size: 9px;
+    font-style: italic;
+    color: rgba(255,255,255,0.5);
+    max-width: 60%;
+}
+.full-pt-box {
+    background: rgba(0,0,0,0.75);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Navigation arrows */
+.modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 20px;
+    transition: background 0.2s;
+}
+.modal-nav:hover { background: rgba(255,255,255,0.2); }
+.modal-nav.prev { left: 20px; }
+.modal-nav.next { right: 20px; }
+
+/* Close hint */
+.modal-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+}
 </style>
 </head>
 <body>
@@ -360,6 +513,16 @@ svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-ev
     <div class="legend-item"><div class="legend-line tool"></div> Tool Call</div>
     <div class="legend-item"><div class="legend-line sub"></div> Sub-Agent</div>
     <div class="legend-item"><div class="legend-line ref"></div> Reference</div>
+</div>
+
+<!-- Card Zoom Modal -->
+<div id="cardModal" class="card-modal" onclick="closeModal(event)">
+    <button class="modal-nav prev" onclick="event.stopPropagation(); navigateCard(-1)">‹</button>
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div id="modalCard" class="full-card"></div>
+    </div>
+    <button class="modal-nav next" onclick="event.stopPropagation(); navigateCard(1)">›</button>
+    <div class="modal-hint">Click outside or press Escape to close • Use arrow keys to navigate</div>
 </div>
 
 <script>
@@ -391,25 +554,26 @@ agents.forEach((agent, i) => {
     card.style.left = x + 'px';
     card.style.top = y + 'px';
     card.innerHTML =
-        '<div class="mini-card-border"></div>' +
-        '<div class="mini-card-frame">' +
-            '<div class="card-name">' + agent.name + '</div>' +
-            '<div class="card-art">' + (agent.artUrl ? '<img src="' + agent.artUrl + '">' : '<div class="art-placeholder"></div>') + '</div>' +
-            '<div class="card-pt">' + agent.power + '/' + agent.toughness + '</div>' +
-        '</div>';
+        '<div class="mini-card-art">' + (agent.artUrl ? '<img src="' + agent.artUrl + '">' : '<div class="art-placeholder"></div>') + '</div>' +
+        '<div class="card-name">' + agent.name + '</div>' +
+        '<div class="card-pt">' + agent.power + '/' + agent.toughness + '</div>';
 
-    // Drag functionality
-    let isDragging = false, startX, startY, startLeft, startTop;
+    // Drag functionality with click detection
+    let isDragging = false, hasDragged = false, startX, startY, startLeft, startTop;
     card.addEventListener('mousedown', e => {
         isDragging = true;
+        hasDragged = false;
         startX = e.clientX; startY = e.clientY;
         startLeft = node.x; startTop = node.y;
         card.style.zIndex = 100;
     });
     document.addEventListener('mousemove', e => {
         if (!isDragging) return;
-        node.x = startLeft + (e.clientX - startX);
-        node.y = startTop + (e.clientY - startY);
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasDragged = true;
+        node.x = startLeft + dx;
+        node.y = startTop + dy;
         card.style.left = node.x + 'px';
         card.style.top = node.y + 'px';
         updateEdges();
@@ -419,7 +583,15 @@ agents.forEach((agent, i) => {
         card.style.zIndex = '';
     });
 
-    // Double-click to open card
+    // Click to zoom (only if not dragged)
+    card.addEventListener('click', e => {
+        if (!hasDragged) {
+            e.stopPropagation();
+            showCardModal(i);
+        }
+    });
+
+    // Double-click to open full card dialog
     card.addEventListener('dblclick', () => {
         if (window.sendToPlugin) window.sendToPlugin('openCard:' + agent.name);
     });
@@ -448,6 +620,99 @@ function updateEdges() {
     });
 }
 updateEdges();
+
+// Card zoom modal
+let currentCardIndex = -1;
+let modalExpanded = false;
+
+function showCardModal(index) {
+    currentCardIndex = index;
+    modalExpanded = false;
+    const agent = agents[index];
+    const modal = document.getElementById('cardModal');
+    const modalCard = document.getElementById('modalCard');
+
+    const abilitiesHtml = agent.abilities.map(a =>
+        '<div class="full-ability"><div class="full-ability-name">' + a.name + '</div>' +
+        (a.description ? '<div class="full-ability-desc">' + a.description + '</div>' : '') + '</div>'
+    ).join('');
+
+    const showMoreBtn = agent.abilities.length > 3;
+    const moreBtnHtml = showMoreBtn ? '<button class="modal-more-btn" id="modalMoreBtn" onclick="toggleModalExpand()">▼ more</button>' : '';
+
+    modalCard.innerHTML =
+        '<div class="full-card-art">' + (agent.artUrl ? '<img src="' + agent.artUrl + '">' : '') + '</div>' +
+        '<div class="full-name-bar"><span class="full-card-name">' + agent.name + '</span><span class="full-mana-cost">' + formatManaCost(agent.manaCost) + '</span></div>' +
+        '<div class="full-type-line" id="modalTypeLine">' + agent.typeLine + '</div>' +
+        '<div class="full-text-box" id="modalTextBox">' + abilitiesHtml + moreBtnHtml + '</div>' +
+        '<div class="full-collector-bar">' +
+            '<div class="full-flavor">' + (agent.flavorText || '') + '</div>' +
+            '<div class="full-pt-box">' + agent.power + '/' + agent.toughness + '</div>' +
+        '</div>';
+
+    modal.classList.add('visible');
+}
+
+function closeModal(event) {
+    if (event.target.classList.contains('card-modal')) {
+        document.getElementById('cardModal').classList.remove('visible');
+        currentCardIndex = -1;
+    }
+}
+
+function navigateCard(direction) {
+    if (currentCardIndex < 0) return;
+    let newIndex = currentCardIndex + direction;
+    if (newIndex < 0) newIndex = agents.length - 1;
+    if (newIndex >= agents.length) newIndex = 0;
+    showCardModal(newIndex);
+}
+
+function toggleModalExpand() {
+    modalExpanded = !modalExpanded;
+    const textBox = document.getElementById('modalTextBox');
+    const typeLine = document.getElementById('modalTypeLine');
+    const btn = document.getElementById('modalMoreBtn');
+    if (modalExpanded) {
+        textBox.classList.add('expanded');
+        typeLine.classList.add('shifted');
+        if (btn) btn.textContent = '▲ less';
+    } else {
+        textBox.classList.remove('expanded');
+        typeLine.classList.remove('shifted');
+        if (btn) btn.textContent = '▼ more';
+    }
+}
+
+function formatManaCost(cost) {
+    if (!cost) return '';
+    // Convert {X} symbols to styled spans
+    return cost.replace(/\{([^}]+)\}/g, function(m, symbol) {
+        const colors = {
+            'W': '#f9faf4', 'U': '#0e68ab', 'B': '#150b00',
+            'R': '#d3202a', 'G': '#00733e', 'C': '#ccc2c0'
+        };
+        const bgColor = colors[symbol.toUpperCase()] || '#888';
+        const textColor = ['W', 'C'].includes(symbol.toUpperCase()) ? '#000' : '#fff';
+        const isNumber = /^\d+$/.test(symbol);
+        return '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:' + (isNumber ? '#888' : bgColor) + ';color:' + (isNumber ? '#fff' : textColor) + ';font-size:11px;font-weight:bold;margin-left:2px;border:1px solid rgba(0,0,0,0.3);">' + symbol + '</span>';
+    });
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('cardModal');
+    if (!modal.classList.contains('visible')) return;
+
+    if (e.key === 'Escape') {
+        modal.classList.remove('visible');
+        currentCardIndex = -1;
+    } else if (e.key === 'ArrowLeft') {
+        navigateCard(-1);
+    } else if (e.key === 'ArrowRight') {
+        navigateCard(1);
+    }
+});
 
 function refresh() {
     if (window.sendToPlugin) window.sendToPlugin('refresh');
